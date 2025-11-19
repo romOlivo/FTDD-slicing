@@ -63,10 +63,10 @@ public:
         hashType hash = fnv_offset_basis;
 
         // hash the out weights
-        std::tuple<int, int> weight = get_int_key(edge1.weight->value);
+        std::tuple<int, int> weight = get_int_key(edge1.weight->getValue());
         const unsigned char* bytes = reinterpret_cast<const unsigned char*>(&weight);
         for (std::size_t i = 0; i < sizeof(std::tuple<int, int>); i++) { hash = ( hash ^ static_cast<hashType>(bytes[i]) ) * fnv_prime; }
-        weight = get_int_key(edge2.weight->value);
+        weight = get_int_key(edge2.weight->getValue());
         bytes = reinterpret_cast<const unsigned char*>(&weight);
         for (std::size_t i = 0; i < sizeof(std::tuple<int, int>); i++) { hash = ( hash ^ static_cast<hashType>(bytes[i]) ) * fnv_prime; }
 

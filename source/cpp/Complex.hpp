@@ -17,8 +17,18 @@ public:
         return new Complex(value / b.value);
     }
 
-    std::complex<dataType> value;
+    std::complex<dataType> getValue() {
+        return value;
+    }
+
+    std::complex<dataType> getOriginalValue() {
+        return value;
+    }
+
     Complex* next;
+
+private:
+    std::complex<dataType> value;
 
 };
 

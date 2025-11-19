@@ -89,12 +89,12 @@ PYBIND11_MODULE(cTDD, m) {
     Edge
 */
 bool Edge::operator==(const Edge& other) const {
-    return ((node == other.node) && (get_int_key(weight->value) == get_int_key(other.weight->value)));
+    return ((node == other.node) && (get_int_key(weight->getValue()) == get_int_key(other.weight->getValue())));
 }
 
 std::complex<dataType> Edge::get_amplitude_recur(std::vector<int>& index_values) {
     if (index_values.size() == 0) {
-        return weight->value;
+        return weight->getValue();
     }
 
     if (index_values.size() != (((std::size_t)node->key) + 1)) {
@@ -103,7 +103,7 @@ std::complex<dataType> Edge::get_amplitude_recur(std::vector<int>& index_values)
     } else {
         Edge temp_edge = Slicing(*this, node->key, index_values[0]);
         index_values.erase(index_values.begin());
-        return weight->value * (temp_edge.get_amplitude_recur(index_values));
+        return weight->getValue() * (temp_edge.get_amplitude_recur(index_values));
     }
 }
 
@@ -119,8 +119,8 @@ void Edge::get_measure_prob_recur() {
     Slicing(*this, node->key, 0).get_measure_prob_recur();
     Slicing(*this, node->key, 1).get_measure_prob_recur();
 
-    node->meas_prob.push_back(pow(std::abs(node->edges[0].weight->value), 2) * (node->edges[0].node->meas_prob[0] + node->edges[0].node->meas_prob[1]) * pow(2, (node->key - node->edges[0].node->key)));
-    node->meas_prob.push_back(pow(std::abs(node->edges[1].weight->value), 2) * (node->edges[1].node->meas_prob[0] + node->edges[1].node->meas_prob[1]) * pow(2, (node->key - node->edges[1].node->key)));
+    node->meas_prob.push_back(pow(std::abs(node->edges[0].weight->getValue()), 2) * (node->edges[0].node->meas_prob[0] + node->edges[0].node->meas_prob[1]) * pow(2, (node->key - node->edges[0].node->key)));
+    node->meas_prob.push_back(pow(std::abs(node->edges[1].weight->getValue()), 2) * (node->edges[1].node->meas_prob[0] + node->edges[1].node->meas_prob[1]) * pow(2, (node->key - node->edges[1].node->key)));
     return;
 }
 
@@ -439,17 +439,17 @@ Edge normalize(const keyType& x, const std::vector<Edge>& the_successors) {
     std::vector<Edge> edges = the_successors;
 
     // Calculate absolute weights and find the max of two weights. Here we are taking the left weight if they equal, same as Python
-    dataType weigs_abs0 = std::round(std::abs(edges[0].weight->value) * epi_inv);
-    dataType weigs_abs1 = std::round(std::abs(edges[1].weight->value) * epi_inv);
+    dataType weigs_abs0 = std::round(std::abs(edges[0].weight->getValue()) * epi_inv);
+    dataType weigs_abs1 = std::round(std::abs(edges[1].weight->getValue()) * epi_inv);
     std::complex<dataType> weig_max;
-    if (weigs_abs0 >= weigs_abs1) { weig_max = edges[0].weight->value; } else { weig_max = edges[1].weight->value; }
+    if (weigs_abs0 >= weigs_abs1) { weig_max = edges[0].weight->getValue(); } else { weig_max = edges[1].weight->getValue(); }
 
     // Normalize the node
     for (uint k = 0; k < succ_num; k++) {
-        edges[k].weight = complex_table.Find_Or_Add(edges[k].weight->value / weig_max);
+        edges[k].weight = complex_table.Find_Or_Add(edges[k].weight->getValue() / weig_max);
 
         // Check if any of the successor has zero weight
-        if (get_int_key(edges[k].weight->value) == std::tuple<int, int>(0, 0)) {
+        if (get_int_key(edges[k].weight->getValue()) == std::tuple<int, int>(0, 0)) {
             edges[k].node = node_n1;
             edges[k].weight = value_zero;
         }
@@ -532,7 +532,7 @@ Edge np_2_tdd(TensorArray* U, const std::vector<uint>& slice, const std::vector<
 // TDD to Array conversion
 void tdd_2_np(TensorArray* U, const Edge& edge, const keyType& split_pos, const std::vector<uint>& slice, const uint& slice_ptr, std::map<keyType, int>& key_repeat_num) {
     if (split_pos == -1){ // Recursion terminal
-        U->update(slice, edge.weight->value);
+        U->update(slice, edge.weight->getValue());
     } else {
         // Get the time that current key is repeated in index_set (for hyper-edges)
         uint repeat_num;
@@ -576,7 +576,7 @@ Edge Slicing2(const Edge& edge, const keyType& x, const int& c) {
         return edge;
     } else { // k == x, which is always the case in current TDD setting
         Edge res = edge.node->edges[c];
-        res.weight = complex_table.Find_Or_Add(res.weight->value * edge.weight->value);
+        res.weight = complex_table.Find_Or_Add(res.weight->getValue() * edge.weight->getValue());
         return res;
     }
 }
@@ -589,14 +589,14 @@ Edge add(const Edge& edge1, const Edge& edge2) {
     keyType k2 = edge2.node->key;
 
     // Terminal cases
-    if (edge1.weight->value == std::complex<dataType>(0.0, 0.0)) { // Left operand is zero
+    if (edge1.weight->getValue() == std::complex<dataType>(0.0, 0.0)) { // Left operand is zero
         return edge2;
     }
-    if (edge2.weight->value == std::complex<dataType>(0.0, 0.0)) { // right operand is zero
+    if (edge2.weight->getValue() == std::complex<dataType>(0.0, 0.0)) { // right operand is zero
         return edge1;
     }
     if (edge1.node == edge2.node) { // two operands are the same
-        std::complex<dataType> weig = edge1.weight->value + edge2.weight->value;
+        std::complex<dataType> weig = edge1.weight->getValue() + edge2.weight->getValue();
         if (get_int_key(weig) == std::tuple<int, int>(0, 0)) { // result is 0
             res = Edge(node_n1);
             res.weight = value_zero;
@@ -706,8 +706,8 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
 
     keyType k1 = edge1_in.node->key;
     keyType k2 = edge2_in.node->key;
-    std::complex<dataType> w1 = edge1_in.weight->value;
-    std::complex<dataType> w2 = edge2_in.weight->value;
+    std::complex<dataType> w1 = edge1_in.weight->getValue();
+    std::complex<dataType> w2 = edge2_in.weight->getValue();
 
     // Terminal case 1: Both inputs are terminal nodes
     if ((k1 == -1) && (k2 == -1)) {
@@ -766,7 +766,7 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
     Edge find_cont = cont_computed_table.find(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1);
     if (find_cont.node != nullptr) {
         res = find_cont;
-        std::complex<dataType> w = res.weight->value;
+        std::complex<dataType> w = res.weight->getValue();
         w *= w1 * w2;
         res.weight = complex_table.Find_Or_Add(w);
         return res;
@@ -782,14 +782,14 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
             }
             res = normalize(the_key, the_successors);
             cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
-            std::complex<dataType> w = res.weight->value;
+            std::complex<dataType> w = res.weight->getValue();
             w *= w1 * w2;
             res.weight = complex_table.Find_Or_Add(w);
         } else { // if x in var
             res = add(contract(Slicing(edge1, k1, 0), edge2, key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1), 
                       contract(Slicing(edge1, k1, 1), edge2, key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1));
             cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
-            std::complex<dataType> w = res.weight->value;
+            std::complex<dataType> w = res.weight->getValue();
             w *= w1 * w2;
             res.weight = complex_table.Find_Or_Add(w);
         }
@@ -801,14 +801,14 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
             }
             res = normalize(the_key, the_successors);
             cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
-            std::complex<dataType> w = res.weight->value;
+            std::complex<dataType> w = res.weight->getValue();
             w *= w1 * w2;
             res.weight = complex_table.Find_Or_Add(w);
         } else { // if x in var
             res = add(contract(Slicing(edge1, k1, 0), Slicing(edge2, k2, 0), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1), 
                       contract(Slicing(edge1, k1, 1), Slicing(edge2, k2, 1), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1));
             cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
-            std::complex<dataType> w = res.weight->value;
+            std::complex<dataType> w = res.weight->getValue();
             w *= w1 * w2;
             res.weight = complex_table.Find_Or_Add(w);
         }
@@ -820,14 +820,14 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
             }
             res = normalize(the_key, the_successors);
             cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
-            std::complex<dataType> w = res.weight->value;
+            std::complex<dataType> w = res.weight->getValue();
             w *= w1 * w2;
             res.weight = complex_table.Find_Or_Add(w);
         } else { // if x in var
             res = add(contract(edge1, Slicing(edge2, k2, 0), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1), 
                       contract(edge1, Slicing(edge2, k2, 1), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1));
             cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
-            std::complex<dataType> w = res.weight->value;
+            std::complex<dataType> w = res.weight->getValue();
             w *= w1 * w2;
             res.weight = complex_table.Find_Or_Add(w);
         }

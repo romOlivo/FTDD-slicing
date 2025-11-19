@@ -191,7 +191,7 @@ public:
 
     std::string str() {
         std::ostringstream ss;
-        ss << "TDD of weight " << root.weight->value << ", pointing to node at " << root.node;
+        ss << "TDD of weight " << root.weight->getValue() << ", pointing to node at " << root.node;
         ss << "\nkey_2_index: {\n";
         for (auto const& pair : key_2_index) {
             ss << "    (" << std::to_string(pair.first) << ": " << pair.second << ")\n";

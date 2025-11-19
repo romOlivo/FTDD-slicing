@@ -25,7 +25,7 @@ public:
     }
 
     Complex* Find_Or_Add(std::complex<dataType> value) {
-        if (value == value_one->value) {
+        if (value == value_one->getOriginalValue()) {
             return value_one;
         }
         std::size_t hashVal = hash(value);
@@ -63,7 +63,7 @@ private:
         Complex* find_complex = nullptr;
         Complex* complex = table[hashVal];
         while (complex != nullptr) {
-            if (complex != nullptr && complex->value == value) {
+            if (complex != nullptr && complex->getValue() == value) {
                 find_complex = complex;
                 break;
             }
@@ -73,7 +73,7 @@ private:
     }
 
     void Add_Basic_Numbers(Complex* number) {
-        std::size_t hashVal = hash(number->value);
+        std::size_t hashVal = hash(number->getOriginalValue());
         number->next = table[hashVal];
         table[hashVal] = number;
     }
