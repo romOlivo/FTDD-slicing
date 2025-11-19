@@ -6,24 +6,21 @@
 class ComplexTable {
 
 public:
-    /*
-        Construction/Destruction related functions
-    */
     // Construction
     ComplexTable() {}
     ComplexTable(std::size_t Nbucket) {
         NBUCKET = Nbucket;
         MASK = NBUCKET - 1;
         table.resize(NBUCKET);
-        Add_Basic_Numbers(value_one);
-        Add_Basic_Numbers(value_zero);
+        add_all_basic_numbers();
     }
 
     // Clear everything
     void clear() {
-
+        releaseTables();
     }
 
+    // Finds in the complex table the object with the value searched. If not found, then adds a new one.
     Complex* Find_Or_Add(std::complex<dataType> value) {
         if (value == value_one->getOriginalValue()) {
             return value_one;
@@ -38,6 +35,7 @@ public:
         return complex;
     }
 
+    // Creates a new object that represents the complex number given.
     Complex* create_new_node(std::complex<dataType> value) {
         return new Complex(value);
     }
@@ -45,6 +43,7 @@ public:
 
 private:
 
+    // Definition of the hashing function for complex numbers
     std::size_t hash(std::complex<dataType> value) {
         hashType hash = fnv_offset_basis;
 
@@ -59,6 +58,7 @@ private:
         return static_cast<std::size_t>(hash & MASK);
     }
 
+    // Search for a given complex value if there is an object in the table that represents it.
     Complex* searchTable(const std::size_t& hashVal, std::complex<dataType> value) {
         Complex* find_complex = nullptr;
         Complex* complex = table[hashVal];
@@ -72,10 +72,36 @@ private:
         return find_complex;
     }
 
+    // Add an already created object representing a complex
     void Add_Basic_Numbers(Complex* number) {
         std::size_t hashVal = hash(number->getOriginalValue());
         number->next = table[hashVal];
         table[hashVal] = number;
+    }
+
+    void add_all_basic_numbers() {
+        Add_Basic_Numbers(value_one);
+        Add_Basic_Numbers(value_zero);
+    }
+
+    // Release memory of the tables
+    void releaseTables() {
+        for (auto& bucket: table) { // a bucket in the table
+            // Release bucket
+            Complex* current = bucket;
+            while (current) {
+                Complex* temp = current;
+                current = current->next;
+                if (!(temp->getOriginalValue() == value_one->getOriginalValue() ||
+                      temp->getOriginalValue() == value_zero->getOriginalValue())) {
+                    delete temp;
+                }
+            }
+            bucket = nullptr;
+        }
+        if (NBUCKET > 0) {
+            add_all_basic_numbers();
+        }
     }
 
     // Parameters of the table
