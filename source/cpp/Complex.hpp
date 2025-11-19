@@ -18,9 +18,11 @@ public:
     }
 
     std::complex<dataType> value;
+    Complex* next;
 
 };
 
+// Declare some common complex numbers
 Complex* value_zero = new Complex(0);
 Complex* value_one = new Complex(1);
 
