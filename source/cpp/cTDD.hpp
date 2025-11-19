@@ -44,6 +44,8 @@ typedef uint16_t refCntType;
 typedef Eigen::VectorXcd complexArrayType;
 typedef std::uint32_t hashType;
 
+#include "Complex.hpp"
+
 
 /*
     Global Variables
@@ -145,15 +147,15 @@ Node* node_n1 = new Node(-1);
 class Edge {
 
 public:
-    std::complex<dataType> weight;
+    Complex* weight;
     Node* node;
 
     Edge() {
-        weight = 0;
+        weight = value_zero;
         node = nullptr;
     }
     Edge(Node* node_) {
-        weight = 1.0;
+        weight = value_one;
         node = node_;
     }
 
@@ -189,7 +191,7 @@ public:
 
     std::string str() {
         std::ostringstream ss;
-        ss << "TDD of weight " << root.weight << ", pointing to node at " << root.node;
+        ss << "TDD of weight " << root.weight->value << ", pointing to node at " << root.node;
         ss << "\nkey_2_index: {\n";
         for (auto const& pair : key_2_index) {
             ss << "    (" << std::to_string(pair.first) << ": " << pair.second << ")\n";

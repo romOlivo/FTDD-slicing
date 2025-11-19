@@ -159,7 +159,7 @@ public:
         
         for (const auto& edge : edges) {
             // hash the out weights
-            std::tuple<int, int> weight = get_int_key(edge.weight);
+            std::tuple<int, int> weight = get_int_key(edge.weight->value);
             const unsigned char* bytes = reinterpret_cast<const unsigned char*>(&weight);
             for (std::size_t i = 0; i < sizeof(std::tuple<int, int>); i++) {
                 hash = hash ^ static_cast<hashType>(bytes[i]);
