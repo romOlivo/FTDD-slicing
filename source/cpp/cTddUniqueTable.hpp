@@ -209,7 +209,7 @@ public:
         } else { // if node not found
             // Get a new node
             Node* res;
-            // romOlivo: This part was modified, so now available nodes can be used when it is possible.
+            // @romOlivo: This part was modified, so now available nodes can be used when it is possible.
             if (available != nullptr) {
                 res = available;
                 available = available->next;

@@ -50,7 +50,7 @@ public:
     [[nodiscard]] std::size_t   getCount() const        { return NBUCKET; }
     [[nodiscard]] std::size_t   getHit() const          { return hits; }
     [[nodiscard]] std::size_t   getLookups() const      { return lookups; }
-    // romOlivo: Added for counting collisions
+    // @romOlivo: Added for counting collisions
     [[nodiscard]] std::size_t   getCollisions() const   { return collisions; }
     [[nodiscard]] dataType      hitRatio() const        { return static_cast<dataType>(hits) / static_cast<dataType>(lookups); }
 
@@ -90,13 +90,16 @@ public:
         std::size_t hashVal = hash(edge1, edge2);
         // @romOlivo: Added for counting collisions and to be able to remove nodes not used by this table.
         if (table[hashVal].res.node != nullptr) {
+            collisions++;
+            if (table[hashVal].edge1.node->refCnt + table[hashVal].edge2.node->refCnt < edge1.node->refCnt + edge2.node->refCnt) {
+                return;
+            }
             unique_table.decr_ref_count(table[hashVal].edge1);
             unique_table.decr_ref_count(table[hashVal].edge2);
             unique_table.decr_ref_count(table[hashVal].res);
-            collisions++;
         }
         table[hashVal]     = {edge1, edge2, res};
-        // romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
+        // @romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
         unique_table.incr_ref_count(edge1);
         unique_table.incr_ref_count(edge2);
         unique_table.incr_ref_count(res);
@@ -141,7 +144,7 @@ private:
     // lookup statistics
     std::size_t hits    = 0;
     std::size_t lookups = 0;
-    // romOlivo: Added for counting collisions
+    // @romOlivo: Added for counting collisions
     std::size_t collisions = 0;
 };
 
@@ -177,7 +180,7 @@ public:
     [[nodiscard]] std::size_t   getCount() const        { return NBUCKET; }
     [[nodiscard]] std::size_t   getHit() const          { return hits; }
     [[nodiscard]] std::size_t   getLookups() const      { return lookups; }
-    // romOlivo: Added for counting collisions
+    // @romOlivo: Added for counting collisions
     [[nodiscard]] std::size_t   getCollisions() const   { return collisions; }
     [[nodiscard]] dataType      hitRatio() const        { return static_cast<dataType>(hits) / static_cast<dataType>(lookups); }
 
@@ -216,15 +219,18 @@ public:
         Edge temp;
         // @romOlivo: Added for counting collisions and to be able to remove nodes not used by this table.
         if (table[hashVal].res.node != nullptr) {
+            collisions++;
+            if (table[hashVal].node1->refCnt + table[hashVal].node2->refCnt < node1->refCnt + node2->refCnt) {
+                return;
+            }
             temp.node = table[hashVal].node1;
             unique_table.decr_ref_count(temp);
             temp.node = table[hashVal].node2;
             unique_table.decr_ref_count(temp);
             unique_table.decr_ref_count(table[hashVal].res);
-            collisions++;
         }
         table[hashVal]     = {node1, node2, key_2_new_key_1, key_2_new_key_2, res};
-        // romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
+        // @romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
         temp.node = table[hashVal].node1;
         unique_table.incr_ref_count(temp);
         temp.node = table[hashVal].node2;
@@ -273,7 +279,7 @@ private:
     // lookup statistics
     std::size_t hits    = 0;
     std::size_t lookups = 0;
-    // romOlivo: Added for counting collisions
+    // @romOlivo: Added for counting collisions
     std::size_t collisions = 0;
 };
 
