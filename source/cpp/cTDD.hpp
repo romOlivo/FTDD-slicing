@@ -10,27 +10,6 @@
 #ifndef CTDD_HPP
 #define CTDD_HPP
 
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-#include <cstdlib>
-#include <ctime>
-#include <random>
-
-#include <string>
-#include <cmath>
-#include <limits>
-#include <complex>
-
-#include <vector>
-#include <set>
-#include <map>
-#include <unordered_map>
-#include <algorithm>
-#include <eigen3/Eigen/Dense>
-
-#include <graphviz/gvc.h>
-
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
@@ -38,12 +17,7 @@
 namespace py = pybind11;
 constexpr auto byref = py::return_value_policy::reference_internal;
 
-typedef double dataType;
-typedef int8_t keyType;
-typedef uint16_t refCntType;
-typedef Eigen::VectorXcd complexArrayType;
-typedef std::uint32_t hashType;
-
+#include "Definitions.hpp"
 #include "Complex.hpp"
 
 
