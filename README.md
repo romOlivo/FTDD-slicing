@@ -64,6 +64,11 @@ make verify
 This will simulate all the circuits in `/Benchmarks/Verification` using [IBM Qiskit Aer](https://github.com/Qiskit/qiskit-aer), [PyTDD](https://github.com/Veriqc/TDD), and FTDD, and compare their fidelities. Check the log file `/TestFTDD/log/VerifyFTDD.log` for results. <br>
 <br>
 
+Also you can execute the in-build unit test to ensure the correctness of every underlying class
+```sh
+ctest --output-on-failure
+```
+
 ## Reproducing FTDD Experimental Results
 To reproduce the experimental results for [Google TensorNetwork](https://github.com/google/TensorNetwork), in the project root folder, run
 ```sh
