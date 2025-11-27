@@ -16,7 +16,7 @@ public:
 
     // Clear everything
     void clear() {
-        // releaseTables();
+        releaseTables();
     }
 
     // Looks for the given real number. If not found, creates a new one
