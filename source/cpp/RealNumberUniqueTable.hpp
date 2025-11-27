@@ -64,6 +64,20 @@ private:
         return find_realNumber;
     }
 
+    // Release memory of the tables
+    void releaseTables() {
+        for (auto& bucket: table) { // a bucket in the table
+            // Release bucket
+            RealNumber* current = bucket;
+            while (current) {
+                RealNumber* temp = current;
+                current = current->next;
+                delete temp;
+            }
+            bucket = nullptr;
+        }
+    }
+
     // Parameters of the table
     std::size_t NBUCKET;
     std::vector<RealNumber*> table{std::vector<RealNumber*>(0)};
