@@ -1,6 +1,8 @@
 #ifndef CTDDCOMPLEX_HPP
 #define CTDDCOMPLEX_HPP
 
+#include "RealNumber.hpp"
+
 class Complex {
 
 public:
@@ -10,26 +12,27 @@ public:
     // Construction
     Complex() {}
     Complex(std::complex<dataType> new_value) {
-        value = new_value;
+        value_real = new RealNumber(new_value.real());
+        value_imaginary = new RealNumber(new_value.imag());
     }
 
     Complex* operator/(Complex b) {
-        return new Complex(value / b.value);
+        return new Complex(getValue() / b.getValue());
     }
 
     std::complex<dataType> getValue() {
-        return value;
+        return std::complex<dataType>(RealNumber::getValue(value_real), RealNumber::getValue(value_imaginary));
     }
 
     std::complex<dataType> getOriginalValue() {
-        return value;
+        return getValue();
     }
 
     Complex* next;
 
 private:
-    std::complex<dataType> value;
-
+    RealNumber* value_real;
+    RealNumber* value_imaginary;
 };
 
 // Declare some common complex numbers
