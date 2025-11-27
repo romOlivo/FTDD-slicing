@@ -21,12 +21,48 @@ public:
 
     // Looks for the given real number. If not found, creates a new one
     RealNumber* find_or_add(double value) {
-        return new RealNumber(value);
+        return create_new_real_number(value);
+
+        std::size_t hashVal = hash(value);
+        RealNumber* realNumber = searchTable(hashVal, value);
+        if (realNumber == nullptr) {
+            realNumber = create_new_real_number(value);
+            realNumber->next = table[hashVal];
+            table[hashVal] = realNumber;
+        }
+        return realNumber;
+
     }
 
     static void Init_Real_Number_Unique_Table(std::size_t Nbucket) noexcept;
 
 private:
+
+    // Creates or reuses a object with the given real value
+    RealNumber* create_new_real_number(double value) {
+        RealNumber* rn = new RealNumber();
+        rn = RealNumber::setValue(rn, value);
+        return rn;
+    }
+
+    // Definition of the hashing function for real numbers
+    std::size_t hash(double value) {
+        return std::hash<float>{}(value);
+    }
+
+    // Search for a given complex value if there is an object in the table that represents it.
+    RealNumber* searchTable(const std::size_t& hashVal, double value) {
+        RealNumber* find_realNumber = nullptr;
+        RealNumber* realNumber = table[hashVal];
+        while (realNumber != nullptr) {
+            if (realNumber != nullptr && realNumber->getValue() == value) {
+                find_realNumber = realNumber;
+                break;
+            }
+            realNumber = realNumber->next;
+        }
+        return find_realNumber;
+    }
 
     // Parameters of the table
     std::size_t NBUCKET;

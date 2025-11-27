@@ -3,7 +3,7 @@
 
 #include "RealNumberUniqueTable.hpp"
 
-static void Init_Real_Number_Unique_Table(std::size_t Nbucket) {
+void RealNumberUniqueTable::Init_Real_Number_Unique_Table(std::size_t Nbucket) noexcept {
     real_number_unique_table = RealNumberUniqueTable(Nbucket);
     real_number_unique_table.clear();
 }
