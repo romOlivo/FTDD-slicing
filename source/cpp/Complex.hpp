@@ -1,6 +1,7 @@
 #ifndef CTDDCOMPLEX_HPP
 #define CTDDCOMPLEX_HPP
 
+#include "RealNumberUniqueTable.hpp"
 #include "RealNumber.hpp"
 
 class Complex {
@@ -12,8 +13,8 @@ public:
     // Construction
     Complex() {}
     Complex(std::complex<dataType> new_value) {
-        value_real = new RealNumber(new_value.real());
-        value_imaginary = new RealNumber(new_value.imag());
+        value_real = real_number_unique_table.find_or_add(new_value.real());
+        value_imaginary = real_number_unique_table.find_or_add(new_value.imag());
     }
 
     Complex* operator/(Complex b) {
