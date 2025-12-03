@@ -14,6 +14,7 @@
 #include "cTddUniqueTable.hpp"
 #include "cTddComplexTable.hpp"
 #include "cTddComputedCache.hpp"
+#include "RealNumberUniqueTable.hpp"
 
 /*
     Bindings
@@ -402,7 +403,12 @@ TDD Ini_TDD(py::list index_order, py::list TabConfig, bool debug) {
     );
     cont_computed_table.clear();
 
-    // Initialize the cont complex table
+    // Initialize the real number unique table
+    RealNumberUniqueTable::Init_Real_Number_Unique_Table(
+        TabConfig[2].cast<std::size_t>()    // NBUCKET
+    );
+
+    // Initialize the complex table
     complex_table = ComplexTable(
         TabConfig[2].cast<std::size_t>()    // NBUCKET
     );

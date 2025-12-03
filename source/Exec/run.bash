@@ -1,10 +1,15 @@
 #!/bin/bash
 tools=('FTDD')
-paths=('qft_indep' 'rqc' 'ghz' 'qnn' 'graph_state' 'qwalk' 'real_amplitude' 'qpe' 'amplitude_estimation' 'grover')
-circuit=('qftentangled_indep_qiskit' 'rqc' 'ghz' 'qnn_indep_tket' 'graph_state' 'qwalk_d1' 'realamprandom_indep_qiskit' 'qpeexact_indep_qiskit' 'ae_indep_qiskit' 'grover-v-chain_ind'>
-minQubits=(10 1 20 5 5 3 2 2 2 2)
-maxQubits=(129 25 129 50 50 15 130 130 130 17)
-methods=('seq' 'cot')
+#paths=('qft_indep' 'rqc' 'ghz' 'qnn' 'graph_state' 'qwalk' 'real_amplitude' 'qpe' 'amplitude_estimation' 'grover')
+#circuit=('qftentangled_indep_qiskit' 'rqc' 'ghz' 'qnn_indep_tket' 'graph_state' 'qwalk_d1' 'realamprandom_indep_qiskit' 'qpeexact_indep_qiskit' 'ae_indep_qiskit' 'grover-v-chain_ind'>
+#minQubits=(10 1 20 5 5 3 2 2 2 2)
+#maxQubits=(129 25 129 50 50 15 130 130 130 17)
+#methods=('seq' 'cot')
+paths=('qft_indep' 'rqc' 'qnn' 'qwalk')
+circuit=('qftentangled_indep_qiskit' 'rqc' 'qnn_indep_tket' 'qwalk_d1')
+minQubits=(10 1 5 3)
+maxQubits=(129 25 50 15)
+methods=('seq')
 echo "Starting all executions..."
 for (( j=0; j<${#tools[@]}; j++))
 do
