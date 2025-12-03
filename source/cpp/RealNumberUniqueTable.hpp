@@ -59,12 +59,15 @@ private:
 
     // Search for a given complex value if there is an object in the table that represents it.
     RealNumber* searchTable(const std::size_t& hashVal, double value) {
-        return nullptr;
+        double abs_value = std::abs(value);
         RealNumber* find_realNumber = nullptr;
         RealNumber* realNumber = table[hashVal];
         while (realNumber != nullptr) {
-            if (realNumber != nullptr && realNumber->getValue() == value) {
+            if (realNumber != nullptr && realNumber->getValue() == abs_value) {
                 find_realNumber = realNumber;
+                if (value < 0) {
+                    find_realNumber = RealNumber::setNegativePointer(find_realNumber);
+                }
                 break;
             }
             realNumber = realNumber->next;
