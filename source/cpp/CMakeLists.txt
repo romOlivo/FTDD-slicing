@@ -19,19 +19,27 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -fPIC")
 find_package(pybind11 REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-pybind11_add_module(${PROJECT_NAME} cTDD.cpp)
+add_library(ctdd_core
+    RealNumberUniqueTable.cpp
+)
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
-target_include_directories(${PROJECT_NAME} PRIVATE ${PYBIND11_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE Eigen3::Eigen)
+target_include_directories(ctdd_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(ctdd_core PUBLIC Eigen3::Eigen)
+
+pybind11_add_module(${PROJECT_NAME} cTDD.cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE ctdd_core)
 
 # @romOlivo Added the test as executables
 add_executable(tests
-    testComplex.cpp
+    test/testComplex.cpp
+    test/testRealNumberUniqueTable.cpp
 )
 
 # @romOlivo Link Catch2
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+target_link_libraries(tests PRIVATE
+    ctdd_core
+    Catch2::Catch2WithMain
+)
 
 # @romOlivo Discover test automatically
 enable_testing()

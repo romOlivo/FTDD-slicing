@@ -86,6 +86,6 @@ private:
 };
 
 // Declare the global complex table
-RealNumberUniqueTable real_number_unique_table;
+extern RealNumberUniqueTable real_number_unique_table;
 
 #endif

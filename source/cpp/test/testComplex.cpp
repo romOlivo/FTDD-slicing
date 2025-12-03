@@ -1,8 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "RealNumberUniqueTable.cpp"
-#include "Definitions.hpp"
-#include "Complex.hpp"
+#include "../RealNumberUniqueTable.hpp"
+#include "../Definitions.hpp"
+#include "../Complex.hpp"
 
 TEST_CASE("Complex - getValue different ++", "[cpx_gVd++]") {
     RealNumberUniqueTable::Init_Real_Number_Unique_Table(1);

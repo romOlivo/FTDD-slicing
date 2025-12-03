@@ -1,6 +1,8 @@
 #ifndef CTDDREALNUMBER_HPP
 #define CTDDREALNUMBER_HPP
 
+#include "Definitions.hpp"
+
 class alignas(2) RealNumber {
 
 public:
