@@ -21,6 +21,7 @@ find_package(Eigen3 REQUIRED)
 
 add_library(ctdd_core
     RealNumberUniqueTable.cpp
+    Complex.cpp
 )
 
 target_include_directories(ctdd_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

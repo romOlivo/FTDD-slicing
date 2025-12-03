@@ -12,6 +12,7 @@ public:
         NBUCKET = Nbucket;
         MASK = NBUCKET - 1;
         table.resize(NBUCKET);
+        n_nodes = 0;
     }
 
     // Clear everything
@@ -21,17 +22,23 @@ public:
 
     // Looks for the given real number. If not found, creates a new one
     RealNumber* find_or_add(double value) {
-        return create_new_real_number(value);
-
         std::size_t hashVal = hash(value);
         RealNumber* realNumber = searchTable(hashVal, value);
         if (realNumber == nullptr) {
             realNumber = create_new_real_number(value);
             realNumber->next = table[hashVal];
             table[hashVal] = realNumber;
+            if (value < 0) {
+                realNumber = RealNumber::setNegativePointer(realNumber);
+            }
+            n_nodes++;
         }
         return realNumber;
 
+    }
+
+    long getTotalNodes() {
+        return n_nodes;
     }
 
     static void Init_Real_Number_Unique_Table(std::size_t Nbucket) noexcept;
@@ -41,17 +48,18 @@ private:
     // Creates or reuses a object with the given real value
     RealNumber* create_new_real_number(double value) {
         RealNumber* rn = new RealNumber();
-        rn = RealNumber::setValue(rn, value);
+        rn->setVal(value);;
         return rn;
     }
 
     // Definition of the hashing function for real numbers
     std::size_t hash(double value) {
-        return std::hash<float>{}(value);
+        return static_cast<std::size_t>(std::hash<double>{}(value) & MASK);
     }
 
     // Search for a given complex value if there is an object in the table that represents it.
     RealNumber* searchTable(const std::size_t& hashVal, double value) {
+        return nullptr;
         RealNumber* find_realNumber = nullptr;
         RealNumber* realNumber = table[hashVal];
         while (realNumber != nullptr) {
@@ -76,12 +84,14 @@ private:
             }
             bucket = nullptr;
         }
+        n_nodes = 0;
     }
 
     // Parameters of the table
     std::size_t NBUCKET;
-    std::vector<RealNumber*> table{std::vector<RealNumber*>(0)};
+    std::vector<RealNumber*> table{std::vector<RealNumber*>(1)};
     std::size_t MASK;
+    long n_nodes = 0;
 
 };
 

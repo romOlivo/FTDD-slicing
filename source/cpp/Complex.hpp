@@ -37,7 +37,7 @@ private:
 };
 
 // Declare some common complex numbers
-Complex* value_zero = new Complex(0);
-Complex* value_one = new Complex(1);
+extern Complex* value_zero;
+extern Complex* value_one;
 
 #endif
