@@ -405,12 +405,12 @@ TDD Ini_TDD(py::list index_order, py::list TabConfig, bool debug) {
 
     // Initialize the real number unique table
     RealNumberUniqueTable::Init_Real_Number_Unique_Table(
-        TabConfig[2].cast<std::size_t>()    // NBUCKET
+        TabConfig[5].cast<std::size_t>()    // NBUCKET
     );
 
     // Initialize the complex table
     complex_table = ComplexTable(
-        TabConfig[2].cast<std::size_t>()    // NBUCKET
+        TabConfig[5].cast<std::size_t>()    // NBUCKET
     );
     complex_table.clear();
 

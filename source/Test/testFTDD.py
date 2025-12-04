@@ -103,7 +103,7 @@ class TestFTDD(unittest.TestCase):
         initial_gc_lur = 0.9
         act_bucket = 32768
         cct_bucket = 32768
-        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket]
+        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket, n_bucket]
         path = ((0, 1), (0, 1), (0, 1), (0, 1), (0, 1))
         result = make_sim(cir, uniqTabConfig, path)
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_close_open(), result))
@@ -115,7 +115,7 @@ class TestFTDD(unittest.TestCase):
         initial_gc_lur = 0.9
         act_bucket = 32768
         cct_bucket = 32768
-        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket]
+        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket, n_bucket]
         path = generate_path(n_qubits=3, block_gates=6, mid_gates=4)
         result = make_sim(cir, uniqTabConfig, path)
         self.assertTrue(equal_tolerance(creator.get_tricky_circuit_solution_close_open(), result))
@@ -127,7 +127,7 @@ class TestFTDD(unittest.TestCase):
         initial_gc_lur = 0
         act_bucket = 32768
         cct_bucket = 32768
-        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket]
+        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket, n_bucket]
         path = ((0, 1), (0, 1), (0, 1), (0, 1), (0, 1))
         result = make_sim(cir, uniqTabConfig, path)
         data = generate_ftdd_data()
@@ -141,7 +141,7 @@ class TestFTDD(unittest.TestCase):
         initial_gc_lur = 0
         act_bucket = 32768
         cct_bucket = 32768
-        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket]
+        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket, n_bucket]
         path = generate_path(n_qubits=3, block_gates=6, mid_gates=4)
         result = make_sim(cir, uniqTabConfig, path)
         data = generate_ftdd_data()
@@ -155,7 +155,7 @@ class TestFTDD(unittest.TestCase):
         initial_gc_lur = 0
         act_bucket = 1
         cct_bucket = 1
-        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket]
+        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket, n_bucket]
         path = ((0, 1), (0, 1), (0, 1), (0, 1), (0, 1))
         result = make_sim(cir, uniqTabConfig, path)
         data = generate_ftdd_data()
@@ -170,7 +170,7 @@ class TestFTDD(unittest.TestCase):
         initial_gc_lur = 0
         act_bucket = 1
         cct_bucket = 1
-        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket]
+        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket, n_bucket]
         path = generate_path(n_qubits=3, block_gates=6, mid_gates=4)
         result = make_sim(cir, uniqTabConfig, path)
         data = generate_ftdd_data()
