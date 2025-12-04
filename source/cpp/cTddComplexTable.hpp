@@ -47,6 +47,14 @@ public:
         return n_nodes;
     }
 
+    long getNBuckets() {
+        long n_buckets = 0;
+        for (auto& bucket: table) {
+            n_buckets++;
+        }
+        return n_buckets;
+    }
+
     static void Init_Complex_Unique_Table(std::size_t Nbucket) noexcept;
 
 

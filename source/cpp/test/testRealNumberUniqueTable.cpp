@@ -108,3 +108,15 @@ TEST_CASE("RealNumberUniqueTable - getTotalNodes normal 8 inserted 2 total =+-",
     real_number_unique_table.find_or_add(number);
     REQUIRE(2 == real_number_unique_table.getTotalNodes());
 }
+
+TEST_CASE("RealNumberUniqueTable - getTotalBuckets empty 1", "[ct_gTBe 1]") {
+    long n_buckets = 1;
+    RealNumberUniqueTable::Init_Real_Number_Unique_Table(n_buckets);
+    REQUIRE(n_buckets == real_number_unique_table.getNBuckets());
+}
+
+TEST_CASE("RealNumberUniqueTable - getTotalBuckets empty 10", "[ct_gTBe 10]") {
+    long n_buckets = 10;
+    RealNumberUniqueTable::Init_Real_Number_Unique_Table(n_buckets);
+    REQUIRE(n_buckets == real_number_unique_table.getNBuckets());
+}

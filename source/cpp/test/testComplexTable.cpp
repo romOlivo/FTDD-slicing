@@ -81,3 +81,15 @@ TEST_CASE("ComplexTable - getTotalNodes normal 3 inserted 4 total", "[ct_gTNn 3/
     complex_table.Find_Or_Add(value);
     REQUIRE(4 == complex_table.getTotalNodes());
 }
+
+TEST_CASE("ComplexTable - getTotalBuckets empty 1", "[ct_gTBe 1]") {
+    long n_buckets = 1;
+    ComplexTable::Init_Complex_Unique_Table(n_buckets);
+    REQUIRE(n_buckets == complex_table.getNBuckets());
+}
+
+TEST_CASE("ComplexTable - getTotalBuckets empty 10", "[ct_gTBe 10]") {
+    long n_buckets = 10;
+    ComplexTable::Init_Complex_Unique_Table(n_buckets);
+    REQUIRE(n_buckets == complex_table.getNBuckets());
+}
