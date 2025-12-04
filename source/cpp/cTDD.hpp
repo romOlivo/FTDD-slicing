@@ -20,21 +20,6 @@ constexpr auto byref = py::return_value_policy::reference_internal;
 #include "Definitions.hpp"
 #include "Complex.hpp"
 
-
-/*
-    Global Variables
-*/
-
-// 32-bit FNV hash parameters
-const hashType fnv_prime = 0x01000193;
-const hashType fnv_offset_basis = 0x811c9dc5;
-
-dataType epi = 0.000001;
-dataType epi_inv = 1 / epi;
-
-// two-level quantum system
-uint succ_num = 2;
-
 // the global index order
 std::unordered_map<std::string, int> global_index_order;
 

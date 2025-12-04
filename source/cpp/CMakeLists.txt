@@ -20,7 +20,9 @@ find_package(pybind11 REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 add_library(ctdd_core
+    Definitions.cpp
     RealNumberUniqueTable.cpp
+    cTddComplexTable.cpp
     Complex.cpp
 )
 
@@ -33,6 +35,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ctdd_core)
 # @romOlivo Added the test as executables
 add_executable(tests
     test/testComplex.cpp
+    test/testComplexTable.cpp
     test/testRealNumberUniqueTable.cpp
 )
 

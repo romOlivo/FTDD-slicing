@@ -2,6 +2,7 @@
 #define CTDDCOMPLEXTABLE_HPP
 
 #include "Complex.hpp"
+#include "Definitions.hpp"
 
 class ComplexTable {
 
@@ -39,6 +40,8 @@ public:
     Complex* create_new_node(std::complex<dataType> value) {
         return new Complex(value);
     }
+
+    static void Init_Complex_Unique_Table(std::size_t Nbucket) noexcept;
 
 
 private:
@@ -112,6 +115,6 @@ private:
 };
 
 // Declare the global complex table
-ComplexTable complex_table;
+extern ComplexTable complex_table;
 
 #endif

@@ -1178,10 +1178,10 @@ def contract_with_FTDD(path, tns, indices, n):
     alpha = 2
 
     n = 30
-    NBUCKET = 2 ** (n-1)
+    NBUCKET = 2 ** (n-1) - 1
     INITIAL_GC_LIMIT = int(load_factor * NBUCKET)
     INITIAL_GC_LUR = 0.9
-    CCT_NBUCKET = ACT_NBUCKET = (2 ** (n-2)) - 1
+    CCT_NBUCKET = ACT_NBUCKET = (2 ** 22) - 1
     uniqTabConfig = [INITIAL_GC_LIMIT, INITIAL_GC_LUR, NBUCKET, ACT_NBUCKET, CCT_NBUCKET]
 
     cTDD.Ini_TDD(indices, uniqTabConfig, False)

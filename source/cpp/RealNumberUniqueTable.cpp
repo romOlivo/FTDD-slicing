@@ -8,7 +8,7 @@ void RealNumberUniqueTable::Init_Real_Number_Unique_Table(std::size_t Nbucket) n
     real_number_unique_table.clear();
 }
 
-// Declare the global complex table
+// Declare the global real number table
 RealNumberUniqueTable real_number_unique_table;
 
 #endif
