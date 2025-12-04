@@ -13,6 +13,7 @@ public:
         NBUCKET = Nbucket;
         MASK = NBUCKET - 1;
         table.resize(NBUCKET);
+        n_nodes = 0;
         add_all_basic_numbers();
     }
 
@@ -32,6 +33,7 @@ public:
             complex = create_new_node(value);
             complex->next = table[hashVal];
             table[hashVal] = complex;
+            n_nodes++;
         }
         return complex;
     }
@@ -39,6 +41,10 @@ public:
     // Creates a new object that represents the complex number given.
     Complex* create_new_node(std::complex<dataType> value) {
         return new Complex(value);
+    }
+
+    long getTotalNodes() {
+        return n_nodes;
     }
 
     static void Init_Complex_Unique_Table(std::size_t Nbucket) noexcept;
@@ -80,6 +86,7 @@ private:
         std::size_t hashVal = hash(number->getOriginalValue());
         number->next = table[hashVal];
         table[hashVal] = number;
+        n_nodes++;
     }
 
     void add_all_basic_numbers() {
@@ -102,6 +109,7 @@ private:
             }
             bucket = nullptr;
         }
+        n_nodes = 0;
         if (NBUCKET > 0) {
             add_all_basic_numbers();
         }
@@ -111,6 +119,7 @@ private:
     std::size_t NBUCKET;
     std::vector<Complex*> table{std::vector<Complex*>(0)};
     std::size_t MASK;
+    long n_nodes = 0;
 
 };
 

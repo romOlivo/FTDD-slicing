@@ -29,6 +29,10 @@ public:
         return getValue();
     }
 
+    static std::complex<dataType> getValue(Complex* c) {
+        return c->getValue();
+    }
+
     Complex* next;
 
 private:
