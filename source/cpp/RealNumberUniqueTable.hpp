@@ -62,7 +62,9 @@ private:
 
     // Definition of the hashing function for real numbers
     std::size_t hash(double value) {
-        return static_cast<std::size_t>(std::hash<double>{}(value) & MASK);
+        static std::size_t MASK_HASH = NBUCKET - 1;
+        const auto key = static_cast<std::size_t>(std::nearbyint(value * MASK_HASH));
+        return std::min<std::size_t>(key, MASK_HASH);
     }
 
     // Search for a given complex value if there is an object in the table that represents it.
