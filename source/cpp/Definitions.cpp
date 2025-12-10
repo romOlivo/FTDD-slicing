@@ -14,4 +14,7 @@ dataType epi_inv = 1 / epi;
 // two-level quantum system
 uint succ_num = 2;
 
+double TOLERANCE = 0.00000000000001;
+//double TOLERANCE = 0.01;
+
 

@@ -38,3 +38,5 @@ extern dataType epi_inv;
 
 // two-level quantum system
 extern uint succ_num;
+
+extern double TOLERANCE;

@@ -62,9 +62,8 @@ private:
 
     // Definition of the hashing function for real numbers
     std::size_t hash(double value) {
-        static std::size_t MASK_HASH = NBUCKET - 1;
-        const auto key = static_cast<std::size_t>(std::nearbyint(value * MASK_HASH));
-        return std::min<std::size_t>(key, MASK_HASH);
+        auto key = static_cast<std::size_t>(std::nearbyint(value * MASK));
+        return std::min<std::size_t>(key, MASK);
     }
 
     // Search for a given complex value if there is an object in the table that represents it.
@@ -73,7 +72,7 @@ private:
         RealNumber* find_realNumber = nullptr;
         RealNumber* realNumber = table[hashVal];
         while (realNumber != nullptr) {
-            if (realNumber != nullptr && realNumber->getValue() == abs_value) {
+            if (realNumber != nullptr && approxEqual(realNumber->getValue(), abs_value)) {
                 find_realNumber = realNumber;
                 if (value < 0) {
                     find_realNumber = RealNumber::setNegativePointer(find_realNumber);
@@ -83,6 +82,10 @@ private:
             realNumber = realNumber->next;
         }
         return find_realNumber;
+    }
+
+    bool approxEqual(double v1, double v2) {
+        return v1 + TOLERANCE > v2 && v1 - TOLERANCE < v2;
     }
 
     // Release memory of the tables

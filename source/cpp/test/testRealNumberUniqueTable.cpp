@@ -120,3 +120,32 @@ TEST_CASE("RealNumberUniqueTable - getTotalBuckets empty 10", "[ct_gTBe 10]") {
     RealNumberUniqueTable::Init_Real_Number_Unique_Table(n_buckets);
     REQUIRE(n_buckets == real_number_unique_table.getNBuckets());
 }
+
+TEST_CASE("RealNumberUniqueTable - getTotalNodes tolerance 2 inserted 1 total +", "[rnUT_gTNt 2/1+]") {
+    RealNumberUniqueTable::Init_Real_Number_Unique_Table(1);
+    double number = 1.0;
+    double number2 = 1.0 + (TOLERANCE / 2);
+    real_number_unique_table.find_or_add(number);
+    real_number_unique_table.find_or_add(number2);
+    REQUIRE(1 == real_number_unique_table.getTotalNodes());
+}
+
+TEST_CASE("RealNumberUniqueTable - getTotalNodes tolerance 2 inserted 1 total -", "[rnUT_gTNt 2/1-]") {
+    RealNumberUniqueTable::Init_Real_Number_Unique_Table(1);
+    double number = 1.0;
+    double number2 = 1.0 - (TOLERANCE / 2);
+    real_number_unique_table.find_or_add(number);
+    real_number_unique_table.find_or_add(number2);
+    REQUIRE(1 == real_number_unique_table.getTotalNodes());
+}
+
+TEST_CASE("RealNumberUniqueTable - getTotalNodes tolerance 3 inserted 1 total", "[rnUT_gTNt 3/1]") {
+    RealNumberUniqueTable::Init_Real_Number_Unique_Table(1);
+    double number = 1.0;
+    double number2 = 1.0 + (TOLERANCE / 2);
+    double number3 = 1.0 - (TOLERANCE / 2);
+    real_number_unique_table.find_or_add(number);
+    real_number_unique_table.find_or_add(number2);
+    real_number_unique_table.find_or_add(number3);
+    REQUIRE(1 == real_number_unique_table.getTotalNodes());
+}
