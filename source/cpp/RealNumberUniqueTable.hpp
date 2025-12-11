@@ -22,6 +22,14 @@ public:
 
     // Looks for the given real number. If not found, creates a new one
     RealNumber* find_or_add(double value) {
+        if (value < -1) {
+            RealNumber* realNumber = create_new_real_number(value);
+            realNumber = RealNumber::setNegativePointer(realNumber);
+            return realNumber;
+        }
+        if (value > 1) {
+            return create_new_real_number(value);
+        }
         std::size_t hashVal = hash(value);
         RealNumber* realNumber = searchTable(hashVal, value);
         if (realNumber == nullptr) {
@@ -56,7 +64,7 @@ private:
     // Creates or reuses a object with the given real value
     RealNumber* create_new_real_number(double value) {
         RealNumber* rn = new RealNumber();
-        rn->setVal(value);;
+        rn->setVal(value);
         return rn;
     }
 

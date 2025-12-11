@@ -149,3 +149,26 @@ TEST_CASE("RealNumberUniqueTable - getTotalNodes tolerance 3 inserted 1 total", 
     real_number_unique_table.find_or_add(number3);
     REQUIRE(1 == real_number_unique_table.getTotalNodes());
 }
+
+TEST_CASE("RealNumberUniqueTable - getTotalNodes not normalize +", "[rnUT_gTNnn+ 1/0]") {
+    RealNumberUniqueTable::Init_Real_Number_Unique_Table(1);
+    double number = 2.0;
+    real_number_unique_table.find_or_add(number);
+    REQUIRE(0 == real_number_unique_table.getTotalNodes());
+}
+
+TEST_CASE("RealNumberUniqueTable - getTotalNodes not normalize -", "[rnUT_gTNnn+ 1/0]") {
+    RealNumberUniqueTable::Init_Real_Number_Unique_Table(1);
+    double number = -2.0;
+    real_number_unique_table.find_or_add(number);
+    REQUIRE(0 == real_number_unique_table.getTotalNodes());
+}
+
+TEST_CASE("RealNumberUniqueTable - getTotalNodes not normalize +-", "[rnUT_gTNnn+ 2/0]") {
+    RealNumberUniqueTable::Init_Real_Number_Unique_Table(1);
+    double number = 2.0;
+    double number2 = -2.0;
+    real_number_unique_table.find_or_add(number);
+    real_number_unique_table.find_or_add(number2);
+    REQUIRE(0 == real_number_unique_table.getTotalNodes());
+}
