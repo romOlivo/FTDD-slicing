@@ -27,6 +27,9 @@ public:
         if (value == value_one->getOriginalValue()) {
             return value_one;
         }
+        if (std::norm(value) > 1) {
+            return create_new_node(value);
+        }
         std::size_t hashVal = hash(value);
         Complex* complex = searchTable(hashVal, value);
         if (complex == nullptr) {

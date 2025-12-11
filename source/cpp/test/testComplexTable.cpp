@@ -6,14 +6,14 @@
 
 TEST_CASE("ComplexTable - Find_Or_Add 1", "[ct_FoA-1]") {
     ComplexTable::Init_Complex_Unique_Table(1);
-    std::complex<dataType> value(0.5, 0.5);
+    std::complex<dataType> value(0.1, 0.1);
     Complex* c = complex_table.Find_Or_Add(value);
     REQUIRE(value == Complex::getValue(c));
 }
 
 TEST_CASE("ComplexTable - Find_Or_Add 2 same", "[ct_FoA-2s]") {
     ComplexTable::Init_Complex_Unique_Table(1);
-    std::complex<dataType> value(0.5, 0.5);
+    std::complex<dataType> value(0.1, 0.1);
     Complex* c = complex_table.Find_Or_Add(value);
     Complex* c2 = complex_table.Find_Or_Add(value);
     REQUIRE(value == Complex::getValue(c));
@@ -22,8 +22,8 @@ TEST_CASE("ComplexTable - Find_Or_Add 2 same", "[ct_FoA-2s]") {
 
 TEST_CASE("ComplexTable - Find_Or_Add 2 unique", "[ct_FoA-2u]") {
     ComplexTable::Init_Complex_Unique_Table(1);
-    std::complex<dataType> value(0.5, 0.5);
-    std::complex<dataType> value2(-0.5, -0.5);
+    std::complex<dataType> value(0.1, 0.1);
+    std::complex<dataType> value2(-0.1, -0.1);
     Complex* c = complex_table.Find_Or_Add(value);
     Complex* c2 = complex_table.Find_Or_Add(value2);
     REQUIRE(value == Complex::getValue(c));
@@ -52,14 +52,14 @@ TEST_CASE("ComplexTable - getTotalNodes init default 1", "[ct_gTNid1]") {
 
 TEST_CASE("ComplexTable - getTotalNodes normal 1 inserted 3 total", "[ct_gTNn 1/3]") {
     ComplexTable::Init_Complex_Unique_Table(1);
-    std::complex<dataType> value(0.5, 0.5);
+    std::complex<dataType> value(0.1, 0.1);
     complex_table.Find_Or_Add(value);
     REQUIRE(3 == complex_table.getTotalNodes());
 }
 
 TEST_CASE("ComplexTable - getTotalNodes normal 2 inserted 4 total", "[ct_gTNn 2/4]") {
     ComplexTable::Init_Complex_Unique_Table(1);
-    std::complex<dataType> value(0.5, 0.5);
+    std::complex<dataType> value(0.1, 0.1);
     complex_table.Find_Or_Add(value);
     complex_table.Find_Or_Add(-value);
     REQUIRE(4 == complex_table.getTotalNodes());
@@ -67,7 +67,7 @@ TEST_CASE("ComplexTable - getTotalNodes normal 2 inserted 4 total", "[ct_gTNn 2/
 
 TEST_CASE("ComplexTable - getTotalNodes normal 2 inserted 3 total", "[ct_gTNn 2/3]") {
     ComplexTable::Init_Complex_Unique_Table(1);
-    std::complex<dataType> value(0.5, 0.5);
+    std::complex<dataType> value(0.1, 0.1);
     complex_table.Find_Or_Add(value);
     complex_table.Find_Or_Add(value);
     REQUIRE(3 == complex_table.getTotalNodes());
@@ -75,7 +75,7 @@ TEST_CASE("ComplexTable - getTotalNodes normal 2 inserted 3 total", "[ct_gTNn 2/
 
 TEST_CASE("ComplexTable - getTotalNodes normal 3 inserted 4 total", "[ct_gTNn 3/4]") {
     ComplexTable::Init_Complex_Unique_Table(1);
-    std::complex<dataType> value(0.5, 0.5);
+    std::complex<dataType> value(0.1, 0.1);
     complex_table.Find_Or_Add(value);
     complex_table.Find_Or_Add(-value);
     complex_table.Find_Or_Add(value);
@@ -93,3 +93,37 @@ TEST_CASE("ComplexTable - getTotalBuckets empty 10", "[ct_gTBe 10]") {
     ComplexTable::Init_Complex_Unique_Table(n_buckets);
     REQUIRE(n_buckets == complex_table.getNBuckets());
 }
+
+TEST_CASE("ComplexTable - getTotalNodes not normalized ++", "[ct_gTNnn++ 1/2]") {
+    ComplexTable::Init_Complex_Unique_Table(1);
+    std::complex<dataType> value(1, 1);
+    complex_table.Find_Or_Add(value);
+    REQUIRE(2 == complex_table.getTotalNodes());
+}
+TEST_CASE("ComplexTable - getTotalNodes not normalized +-", "[ct_gTNnn+- 1/2]") {
+    ComplexTable::Init_Complex_Unique_Table(1);
+    std::complex<dataType> value(1, -1);
+    complex_table.Find_Or_Add(value);
+    REQUIRE(2 == complex_table.getTotalNodes());
+}
+
+TEST_CASE("ComplexTable - getTotalNodes not normalized --", "[ct_gTNnn-- 1/2]") {
+    ComplexTable::Init_Complex_Unique_Table(1);
+    std::complex<dataType> value(-1, -1);
+    complex_table.Find_Or_Add(value);
+    REQUIRE(2 == complex_table.getTotalNodes());
+}
+
+TEST_CASE("ComplexTable - getTotalNodes not normalized all", "[ct_gTNnn-a 4/2]") {
+    ComplexTable::Init_Complex_Unique_Table(1);
+    std::complex<dataType> value(1, 1);
+    complex_table.Find_Or_Add(value);
+    std::complex<dataType> value2(1, -1);
+    complex_table.Find_Or_Add(value2);
+    std::complex<dataType> value3(-1, 1);
+    complex_table.Find_Or_Add(value3);
+    std::complex<dataType> value4(-1, -1);
+    complex_table.Find_Or_Add(value4);
+    REQUIRE(2 == complex_table.getTotalNodes());
+}
+
