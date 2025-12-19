@@ -582,7 +582,7 @@ Edge Slicing2(const Edge& edge, const keyType& x, const int& c) {
         return edge;
     } else { // k == x, which is always the case in current TDD setting
         Edge res = edge.node->edges[c];
-        res.weight = complex_table.Find_Or_Add(res.weight->getValue() * edge.weight->getValue());
+        res.weight = complex_table.create_new_node(res.weight->getValue() * edge.weight->getValue());
         return res;
     }
 }
@@ -609,7 +609,7 @@ Edge add(const Edge& edge1, const Edge& edge2) {
             return res;
         } else {
             res = Edge(edge1.node);
-            res.weight = complex_table.Find_Or_Add(weig);
+            res.weight = complex_table.create_new_node(weig);
             return res;
         }
     }
@@ -730,7 +730,7 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
         res = Edge(edge1_in.node);
         std::complex<dataType> w = w1 * w2;
         if (cont_num > 0) { w *= std::pow(2, cont_num); }
-        res.weight = complex_table.Find_Or_Add(w);
+        res.weight = complex_table.create_new_node(w);
         return res;
     }
     // Terminal case 2: If edge1 is terminal node
@@ -742,7 +742,7 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
         }
         if ((cont_num == 0) && (key_2_new_key_1[k2] == k2)) {
             res = Edge(edge2_in.node);
-            res.weight = complex_table.Find_Or_Add(w1 * w2);
+            res.weight = complex_table.create_new_node(w1 * w2);
             return res;
         }
     }
@@ -755,7 +755,7 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
         }
         if ((cont_num == 0) && (key_2_new_key_0[k1] == k1)) {
             res = Edge(edge1_in.node);
-            res.weight = complex_table.Find_Or_Add(w1 * w2);
+            res.weight = complex_table.create_new_node(w1 * w2);
             return res;
         }
     }
@@ -774,7 +774,7 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
         res = find_cont;
         std::complex<dataType> w = res.weight->getValue();
         w *= w1 * w2;
-        res.weight = complex_table.Find_Or_Add(w);
+        res.weight = complex_table.create_new_node(w);
         return res;
     }
 
@@ -790,14 +790,14 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
             cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
             std::complex<dataType> w = res.weight->getValue();
             w *= w1 * w2;
-            res.weight = complex_table.Find_Or_Add(w);
+            res.weight = complex_table.create_new_node(w);
         } else { // if x in var
             res = add(contract(Slicing(edge1, k1, 0), edge2, key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1), 
                       contract(Slicing(edge1, k1, 1), edge2, key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1));
             cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
             std::complex<dataType> w = res.weight->getValue();
             w *= w1 * w2;
-            res.weight = complex_table.Find_Or_Add(w);
+            res.weight = complex_table.create_new_node(w);
         }
     } else if (cont_order_0[k1+1] == cont_order_1[k2+1]) { // Two tdds get to the same index
         the_key = key_2_new_key_0[k1];
@@ -809,14 +809,14 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
             cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
             std::complex<dataType> w = res.weight->getValue();
             w *= w1 * w2;
-            res.weight = complex_table.Find_Or_Add(w);
+            res.weight = complex_table.create_new_node(w);
         } else { // if x in var
             res = add(contract(Slicing(edge1, k1, 0), Slicing(edge2, k2, 0), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1), 
                       contract(Slicing(edge1, k1, 1), Slicing(edge2, k2, 1), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1));
             cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
             std::complex<dataType> w = res.weight->getValue();
             w *= w1 * w2;
-            res.weight = complex_table.Find_Or_Add(w);
+            res.weight = complex_table.create_new_node(w);
         }
     } else { // edge2 is on top of edge1
         the_key = key_2_new_key_1[k2];
@@ -828,14 +828,14 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
             cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
             std::complex<dataType> w = res.weight->getValue();
             w *= w1 * w2;
-            res.weight = complex_table.Find_Or_Add(w);
+            res.weight = complex_table.create_new_node(w);
         } else { // if x in var
             res = add(contract(edge1, Slicing(edge2, k2, 0), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1), 
                       contract(edge1, Slicing(edge2, k2, 1), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1));
             cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
             std::complex<dataType> w = res.weight->getValue();
             w *= w1 * w2;
-            res.weight = complex_table.Find_Or_Add(w);
+            res.weight = complex_table.create_new_node(w);
         }
     }
 
