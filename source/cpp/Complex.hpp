@@ -29,6 +29,14 @@ public:
         return getValue();
     }
 
+    void setRealValue(RealNumber* new_value_real) {
+        value_real = new_value_real;
+    }
+
+    void setImaginaryValue(RealNumber* new_value_imaginary) {
+        value_imaginary = new_value_imaginary;
+    }
+
     static std::complex<dataType> getValue(Complex* c) {
         return c->getValue();
     }

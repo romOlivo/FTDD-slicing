@@ -26,6 +26,10 @@ public:
         value = std::abs(newValue);
     }
 
+    void setValUnsafe(double newValue) {
+        value = newValue;
+    }
+
     static RealNumber* setValue(RealNumber* rn, double value) {
         rn->setVal(value);
         if (value < 0) {

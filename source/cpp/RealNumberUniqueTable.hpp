@@ -2,6 +2,8 @@
 #define CTDDREALNUMBERUNIQUETABLE_HPP
 
 #include "RealNumber.hpp"
+#include <cstdint>
+#include <cstring>
 
 class RealNumberUniqueTable {
 
@@ -57,6 +59,40 @@ public:
         return n_buckets;
     }
 
+
+    // @romOlivo: Gets a string with more info about the performance and usage of the Unique Table
+    std::string get_performance_metrics() {
+        int max_length = 0;
+        int n_buckets = 0;
+        int n_nodes = 0;
+        float mean_nodes = 0;
+        int n_buckets_used = 0;
+        float mean_used_nodes = 0;
+        for (auto& bucket: table) {
+            int partial_length = 0;
+            n_buckets++;
+            auto* current = bucket;
+            while (current) {
+                current = current->next;
+                partial_length++;
+                n_nodes++;
+            }
+            if (partial_length > max_length) {
+                max_length = partial_length;
+            }
+            if (partial_length > 0) {
+                n_buckets_used++;
+            }
+            mean_nodes = mean_nodes + partial_length;
+        }
+        mean_used_nodes = mean_nodes / n_buckets_used;
+        mean_nodes = mean_nodes / n_buckets;
+        std::ostringstream oss;
+        oss << "Max length buckets: " << max_length << " / Mean nodes x bucket: " << mean_nodes
+            << " / Mean nodes x used bucket: " << mean_used_nodes << "\n";
+        return oss.str();
+    }
+
     static void Init_Real_Number_Unique_Table(std::size_t Nbucket) noexcept;
 
 private:
@@ -70,8 +106,18 @@ private:
 
     // Definition of the hashing function for real numbers
     std::size_t hash(double value) {
-        auto key = static_cast<std::size_t>(std::nearbyint(value * MASK));
-        return std::min<std::size_t>(key, MASK);
+        if (value == 0.0) value = 0.0;
+
+        std::uint64_t bits;
+        std::memcpy(&bits, &value, sizeof(bits));
+
+        // splitmix64
+        bits += 0x9e3779b97f4a7c15ULL;
+        bits = (bits ^ (bits >> 30)) * 0xbf58476d1ce4e5b9ULL;
+        bits = (bits ^ (bits >> 27)) * 0x94d049bb133111ebULL;
+        bits ^= (bits >> 31);
+
+        return static_cast<std::size_t>(bits) & MASK;
     }
 
     // Search for a given complex value if there is an object in the table that represents it.

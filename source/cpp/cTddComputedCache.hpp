@@ -91,9 +91,11 @@ public:
         // @romOlivo: Added for counting collisions and to be able to remove nodes not used by this table.
         if (table[hashVal].res.node != nullptr) {
             collisions++;
+            /*
             if (table[hashVal].edge1.node->refCnt + table[hashVal].edge2.node->refCnt < edge1.node->refCnt + edge2.node->refCnt) {
                 return;
             }
+            */
             unique_table.decr_ref_count(table[hashVal].edge1);
             unique_table.decr_ref_count(table[hashVal].edge2);
             unique_table.decr_ref_count(table[hashVal].res);
@@ -220,9 +222,11 @@ public:
         // @romOlivo: Added for counting collisions and to be able to remove nodes not used by this table.
         if (table[hashVal].res.node != nullptr) {
             collisions++;
+            /*
             if (table[hashVal].node1->refCnt + table[hashVal].node2->refCnt < node1->refCnt + node2->refCnt) {
                 return;
             }
+            */
             temp.node = table[hashVal].node1;
             unique_table.decr_ref_count(temp);
             temp.node = table[hashVal].node2;

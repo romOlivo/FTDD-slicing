@@ -43,6 +43,17 @@ public:
         return new Complex(value);
     }
 
+    Complex* create_unsaved_new_node(std::complex<dataType> value) {
+        Complex* c = new Complex();
+        RealNumber* n = new RealNumber();
+        n->setValUnsafe(value.real());
+        c->setRealValue(n);
+        n = new RealNumber();
+        n->setValUnsafe(value.imag());
+        c->setImaginaryValue(n);
+        return c;
+    }
+
     long getTotalNodes() {
         return n_nodes;
     }
@@ -55,6 +66,39 @@ public:
         return n_buckets;
     }
 
+    // @romOlivo: Gets a string with more info about the performance and usage of the Unique Table
+    std::string get_performance_metrics() {
+        int max_length = 0;
+        int n_buckets = 0;
+        int n_nodes = 0;
+        float mean_nodes = 0;
+        int n_buckets_used = 0;
+        float mean_used_nodes = 0;
+        for (auto& bucket: table) {
+            int partial_length = 0;
+            n_buckets++;
+            auto* current = bucket;
+            while (current) {
+                current = current->next;
+                partial_length++;
+                n_nodes++;
+            }
+            if (partial_length > max_length) {
+                max_length = partial_length;
+            }
+            if (partial_length > 0) {
+                n_buckets_used++;
+            }
+            mean_nodes = mean_nodes + partial_length;
+        }
+        mean_used_nodes = mean_nodes / n_buckets_used;
+        mean_nodes = mean_nodes / n_buckets;
+        std::ostringstream oss;
+        oss << "Max length buckets: " << max_length << " / Mean nodes x bucket: " << mean_nodes
+            << " / Mean nodes x used bucket: " << mean_used_nodes << "\n";
+        return oss.str();
+    }
+
     static void Init_Complex_Unique_Table(std::size_t Nbucket) noexcept;
 
 
@@ -62,17 +106,18 @@ private:
 
     // Definition of the hashing function for complex numbers
     std::size_t hash(std::complex<dataType> value) {
-        hashType hash = fnv_offset_basis;
+        dataType real = value.real();
+        dataType imag = value.imag();
 
-        // hash the real part
-        hash = hash ^ static_cast<hashType>(value.real());
-        hash = hash * fnv_prime;
+        std::uint64_t r, i;
+        std::memcpy(&r, &real, sizeof(r));
+        std::memcpy(&i, &imag, sizeof(i));
 
-        // hash the imaginary part
-        hash = hash ^ static_cast<hashType>(value.imag());
-        hash = hash * fnv_prime;
+        std::size_t h = fnv_offset_basis;
+        h ^= r; h *= fnv_prime;
+        h ^= i; h *= fnv_prime;
 
-        return static_cast<std::size_t>(hash & MASK);
+        return h & MASK;
     }
 
     // Search for a given complex value if there is an object in the table that represents it.

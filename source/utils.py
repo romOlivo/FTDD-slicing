@@ -31,6 +31,14 @@ def generate_ftdd_data():
     max_length_in_bucket = int(cTDD.get_count().split("\n")[4].split(" / ")[0].split(": ")[1])
     nodes_x_bucket = float(cTDD.get_count().split("\n")[4].split(" / ")[1].split(": ")[1])
     nodes_x_used_bucket = float(cTDD.get_count().split("\n")[4].split(" / ")[2].split(": ")[1])
+    # Complex Table performance metrics
+    complex_max_length_in_bucket = int(cTDD.get_count().split("\n")[5].split(" / ")[0].split(": ")[1])
+    complex_nodes_x_bucket = float(cTDD.get_count().split("\n")[5].split(" / ")[1].split(": ")[1])
+    complex_nodes_x_used_bucket = float(cTDD.get_count().split("\n")[5].split(" / ")[2].split(": ")[1])
+    # Real Number Unique Table performance metrics
+    rn_max_length_in_bucket = int(cTDD.get_count().split("\n")[6].split(" / ")[0].split(": ")[1])
+    rn_nodes_x_bucket = float(cTDD.get_count().split("\n")[6].split(" / ")[1].split(": ")[1])
+    rn_nodes_x_used_bucket = float(cTDD.get_count().split("\n")[6].split(" / ")[2].split(": ")[1])
     return {
         "gc": gc,
         "add_hits": add_hits,
@@ -48,6 +56,12 @@ def generate_ftdd_data():
         "unique_hit_ratio": unique_hit_ratio,
         "nodes_x_used_bucket": nodes_x_used_bucket,
         "max_length_in_bucket": max_length_in_bucket,
+        "complex_nodes_x_bucket": complex_nodes_x_bucket,
+        "complex_nodes_x_used_bucket": complex_nodes_x_used_bucket,
+        "complex_max_length_in_bucket": complex_max_length_in_bucket,
+        "rn_nodes_x_bucket": rn_nodes_x_bucket,
+        "rn_nodes_x_used_bucket": rn_nodes_x_used_bucket,
+        "rn_max_length_in_bucket": rn_max_length_in_bucket,
     }
 
 
@@ -137,6 +151,8 @@ class FileOutputHandler(OutputHandler):
             "unique_hits", "unique_calls", "n_nodes_final", "unique_hit_ratio",
             "add_hits", "add_calls", "add_hit_ratio", "add_collisions",
             "cont_hits", "cont_calls", "cont_hit_ratio", "cont_collisions",
+            "complex_nodes_x_bucket", "complex_nodes_x_used_bucket", "complex_max_length_in_bucket",
+            "rn_nodes_x_bucket", "rn_nodes_x_used_bucket", "rn_max_length_in_bucket"
         ]
 
     def create_file_name(self, n_slices):
