@@ -1177,7 +1177,7 @@ def contract_with_FTDD(path, tns, indices, n):
     load_factor = 1
     alpha = 2
 
-    n = 30
+    n = 22
     NBUCKET = 2 ** (n-1) - 1
     NBUCKET_COMPLEX = 2 ** (n-2) - 1
     INITIAL_GC_LIMIT = int(load_factor * NBUCKET)

@@ -32,13 +32,15 @@ public:
         if (value > 1) {
             return create_new_real_number(value);
         }
-        std::size_t hashVal = hash(value);
-        RealNumber* realNumber = searchTable(hashVal, value);
+        bool isNegative = value < 0;
+        double abs_value = std::abs(value);
+        std::size_t hashVal = hash(abs_value);
+        RealNumber* realNumber = searchTable(hashVal, abs_value, isNegative);
         if (realNumber == nullptr) {
             realNumber = create_new_real_number(value);
             realNumber->next = table[hashVal];
             table[hashVal] = realNumber;
-            if (value < 0) {
+            if (isNegative) {
                 realNumber = RealNumber::setNegativePointer(realNumber);
             }
             n_nodes++;
@@ -121,14 +123,13 @@ private:
     }
 
     // Search for a given complex value if there is an object in the table that represents it.
-    RealNumber* searchTable(const std::size_t& hashVal, double value) {
-        double abs_value = std::abs(value);
+    RealNumber* searchTable(const std::size_t& hashVal, double abs_value, bool isNegative) {
         RealNumber* find_realNumber = nullptr;
         RealNumber* realNumber = table[hashVal];
         while (realNumber != nullptr) {
             if (realNumber != nullptr && approxEqual(realNumber->getValue(), abs_value)) {
                 find_realNumber = realNumber;
-                if (value < 0) {
+                if (isNegative) {
                     find_realNumber = RealNumber::setNegativePointer(find_realNumber);
                 }
                 break;
