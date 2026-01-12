@@ -13,6 +13,10 @@ public:
     // Construction
     Complex() {}
     Complex(std::complex<dataType> new_value) {
+        setValue(new_value);
+    }
+
+    void setValue(std::complex<dataType> new_value) {
         value_real = real_number_unique_table.find_or_add(new_value.real());
         value_imaginary = real_number_unique_table.find_or_add(new_value.imag());
     }

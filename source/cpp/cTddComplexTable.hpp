@@ -40,6 +40,8 @@ public:
 
     // Creates a new object that represents the complex number given.
     Complex* create_new_node(std::complex<dataType> value) {
+        Complex* c = pool.get();
+        c->setValue(value);
         return new Complex(value);
     }
 
@@ -157,7 +159,7 @@ private:
                 current = current->next;
                 if (!(temp->getOriginalValue() == value_one->getOriginalValue() ||
                       temp->getOriginalValue() == value_zero->getOriginalValue())) {
-                    delete temp;
+                    pool.release(temp);
                 }
             }
             bucket = nullptr;
@@ -171,6 +173,7 @@ private:
     // Parameters of the table
     std::size_t NBUCKET;
     std::vector<Complex*> table{std::vector<Complex*>(0)};
+    MemoryPool<Complex> pool;
     std::size_t MASK;
     long n_nodes = 0;
 

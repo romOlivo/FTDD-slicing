@@ -2,6 +2,7 @@
 #define CTDDREALNUMBERUNIQUETABLE_HPP
 
 #include "RealNumber.hpp"
+#include "MemoryPool.hpp"
 #include <cstdint>
 #include <cstring>
 
@@ -101,8 +102,9 @@ private:
 
     // Creates or reuses a object with the given real value
     RealNumber* create_new_real_number(double value) {
-        RealNumber* rn = new RealNumber();
+        RealNumber* rn = pool.get();
         rn->setVal(value);
+        rn->next = nullptr;
         return rn;
     }
 
@@ -151,7 +153,7 @@ private:
             while (current) {
                 RealNumber* temp = current;
                 current = current->next;
-                delete temp;
+                pool.release(temp);
             }
             bucket = nullptr;
         }
@@ -163,6 +165,7 @@ private:
     std::vector<RealNumber*> table{std::vector<RealNumber*>(1)};
     std::size_t MASK;
     long n_nodes = 0;
+    MemoryPool<RealNumber> pool;
 
 };
 

@@ -18,7 +18,7 @@ public:
         setVal(newValue);
     }
 
-    double getValue() {
+    inline double getValue() {
         return value;
     }
 
