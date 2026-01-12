@@ -1,3 +1,6 @@
+#ifndef DEFINITIONS_HPP
+#define DEFINITIONS_HPP
+
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -39,4 +42,6 @@ extern dataType epi_inv;
 // two-level quantum system
 extern uint succ_num;
 
-extern double TOLERANCE;
+constexpr double TOLERANCE = 1e-12;;
+
+#endif

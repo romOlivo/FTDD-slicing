@@ -23,7 +23,6 @@ public:
         releaseTables();
     }
 
-    // Looks for the given real number. If not found, creates a new one
     RealNumber* find_or_add(double value) {
         if (value < -1) {
             RealNumber* realNumber = create_new_real_number(value);
@@ -33,20 +32,42 @@ public:
         if (value > 1) {
             return create_new_real_number(value);
         }
+
         bool isNegative = value < 0;
         double abs_value = std::abs(value);
+
         std::size_t hashVal = hash(abs_value);
-        RealNumber* realNumber = searchTable(hashVal, abs_value, isNegative);
-        if (realNumber == nullptr) {
-            realNumber = create_new_real_number(value);
-            realNumber->next = table[hashVal];
-            table[hashVal] = realNumber;
-            if (isNegative) {
-                realNumber = RealNumber::setNegativePointer(realNumber);
+
+        RealNumber* prev = nullptr;
+        RealNumber* current = table[hashVal];
+
+        // Ordered Searching
+        while (current != nullptr && current->getValue() < abs_value + TOLERANCE) {
+            if (approxEqual(current->getValue(), abs_value)) {
+                // Find
+                if (isNegative) return RealNumber::setNegativePointer(current);
+                return current;
             }
-            n_nodes++;
+            prev = current;
+            current = current->next;
         }
-        return realNumber;
+
+        // Not find
+        RealNumber* rn = pool.get();
+        rn->setVal(abs_value);
+
+        if (prev == nullptr) {
+            rn->next = table[hashVal];
+            table[hashVal] = rn;
+        } else {
+            rn->next = prev->next;
+            prev->next = rn;
+        }
+
+        n_nodes++;
+        if (isNegative) rn = RealNumber::setNegativePointer(rn);
+
+        return rn;
 
     }
 
@@ -55,15 +76,11 @@ public:
     }
 
     long getNBuckets() {
-        long n_buckets = 0;
-        for (auto& bucket: table) {
-            n_buckets++;
-        }
-        return n_buckets;
+        return table.size();
     }
 
 
-    // @romOlivo: Gets a string with more info about the performance and usage of the Unique Table
+    // Gets a string with more info about the performance and usage of the Unique Table
     std::string get_performance_metrics() {
         int max_length = 0;
         int n_buckets = 0;
@@ -109,7 +126,7 @@ private:
     }
 
     // Definition of the hashing function for real numbers
-    std::size_t hash(double value) {
+    inline std::size_t hash(double value) noexcept {
         if (value == 0.0) value = 0.0;
 
         std::uint64_t bits;
@@ -124,25 +141,9 @@ private:
         return static_cast<std::size_t>(bits) & MASK;
     }
 
-    // Search for a given complex value if there is an object in the table that represents it.
-    RealNumber* searchTable(const std::size_t& hashVal, double abs_value, bool isNegative) {
-        RealNumber* find_realNumber = nullptr;
-        RealNumber* realNumber = table[hashVal];
-        while (realNumber != nullptr) {
-            if (realNumber != nullptr && approxEqual(realNumber->getValue(), abs_value)) {
-                find_realNumber = realNumber;
-                if (isNegative) {
-                    find_realNumber = RealNumber::setNegativePointer(find_realNumber);
-                }
-                break;
-            }
-            realNumber = realNumber->next;
-        }
-        return find_realNumber;
-    }
-
-    bool approxEqual(double v1, double v2) {
-        return v1 + TOLERANCE > v2 && v1 - TOLERANCE < v2;
+    inline constexpr bool approxEqual(double v1, double v2) {
+        double diff = v1 - v2;
+        return diff < TOLERANCE && diff > -TOLERANCE;
     }
 
     // Release memory of the tables
