@@ -176,4 +176,8 @@ class TestFTDD(unittest.TestCase):
         data = generate_ftdd_data()
         self.assertEqual(17, data['gc'])
         self.assertTrue(0 < data['cont_collisions'])
+        print("Solution: ")
+        print(creator.get_tricky_circuit_solution_close_open())
+        print("Actual result: ")
+        print(result)
         self.assertTrue(equal_tolerance(creator.get_tricky_circuit_solution_close_open(), result))

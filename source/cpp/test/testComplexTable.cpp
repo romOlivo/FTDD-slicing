@@ -8,7 +8,10 @@ TEST_CASE("ComplexTable - Find_Or_Add 1", "[ct_FoA-1]") {
     ComplexTable::Init_Complex_Unique_Table(1);
     std::complex<dataType> value(0.1, 0.1);
     Complex* c = complex_table.Find_Or_Add(value);
-    REQUIRE(value == Complex::getValue(c));
+    RealNumber* r_real = real_number_unique_table.find_or_add(value.real());
+    RealNumber* r_imag = real_number_unique_table.find_or_add(value.imag());
+    std::complex<dataType> canon_value(RealNumber::getValue(r_real), RealNumber::getValue(r_imag));
+    REQUIRE(canon_value == Complex::getValue(c));
 }
 
 TEST_CASE("ComplexTable - Find_Or_Add 2 same", "[ct_FoA-2s]") {
@@ -16,7 +19,10 @@ TEST_CASE("ComplexTable - Find_Or_Add 2 same", "[ct_FoA-2s]") {
     std::complex<dataType> value(0.1, 0.1);
     Complex* c = complex_table.Find_Or_Add(value);
     Complex* c2 = complex_table.Find_Or_Add(value);
-    REQUIRE(value == Complex::getValue(c));
+    RealNumber* r_real = real_number_unique_table.find_or_add(value.real());
+    RealNumber* r_imag = real_number_unique_table.find_or_add(value.imag());
+    std::complex<dataType> canon_value(RealNumber::getValue(r_real), RealNumber::getValue(r_imag));
+    REQUIRE(canon_value == Complex::getValue(c));
     REQUIRE(c == c2);
 }
 
@@ -26,8 +32,14 @@ TEST_CASE("ComplexTable - Find_Or_Add 2 unique", "[ct_FoA-2u]") {
     std::complex<dataType> value2(-0.1, -0.1);
     Complex* c = complex_table.Find_Or_Add(value);
     Complex* c2 = complex_table.Find_Or_Add(value2);
-    REQUIRE(value == Complex::getValue(c));
-    REQUIRE(value2 == Complex::getValue(c2));
+    RealNumber* r_real = real_number_unique_table.find_or_add(value.real());
+    RealNumber* r_imag = real_number_unique_table.find_or_add(value.imag());
+    std::complex<dataType> canon_value(RealNumber::getValue(r_real), RealNumber::getValue(r_imag));
+    REQUIRE(canon_value == Complex::getValue(c));
+    RealNumber* r_real2 = real_number_unique_table.find_or_add(value2.real());
+    RealNumber* r_imag2 = real_number_unique_table.find_or_add(value2.imag());
+    std::complex<dataType> canon_value2(RealNumber::getValue(r_real2), RealNumber::getValue(r_imag2));
+    REQUIRE(canon_value2 == Complex::getValue(c2));
     REQUIRE(c != c2);
 }
 

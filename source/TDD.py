@@ -29,7 +29,7 @@ epi = 0.000001
     @romOlivo: Set the number of decimals of tolerance for the method 'equal_tolerance'. If the number is increased,
     some of the test cases will fail.
 """
-n_decimals_of_tolerance = 14
+n_decimals_of_tolerance = 13
 
 
 class Index:

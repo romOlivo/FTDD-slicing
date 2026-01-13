@@ -23,6 +23,11 @@ public:
         releaseTables();
     }
 
+    inline double canonize(double value) noexcept {
+        if (value == 0.0) return 0.0;  // avoid -0.0
+        return std::round(value / TOLERANCE) * TOLERANCE;
+    }
+
     RealNumber* find_or_add(double value) {
         if (value < -1) {
             RealNumber* realNumber = create_new_real_number(value);
@@ -35,26 +40,27 @@ public:
 
         bool isNegative = value < 0;
         double abs_value = std::abs(value);
+        double canon_value = canonize(abs_value);
 
-        std::size_t hashVal = hash(abs_value);
+        std::size_t hashVal = hash(canon_value);
 
         RealNumber* prev = nullptr;
         RealNumber* current = table[hashVal];
 
-        // Ordered Searching
-        while (current != nullptr && current->getValue() < abs_value + TOLERANCE) {
-            if (approxEqual(current->getValue(), abs_value)) {
-                // Find
-                if (isNegative) return RealNumber::setNegativePointer(current);
-                return current;
-            }
+        // Búsqueda ordenada exacta
+        while (current != nullptr && current->getValue() < canon_value) {
             prev = current;
             current = current->next;
         }
 
-        // Not find
+        // Nodo encontrado exactamente
+        if (current != nullptr && current->getValue() == canon_value) {
+            return isNegative ? RealNumber::setNegativePointer(current) : current;
+        }
+
+        // Crear nuevo nodo
         RealNumber* rn = pool.get();
-        rn->setVal(abs_value);
+        rn->setVal(canon_value);
 
         if (prev == nullptr) {
             rn->next = table[hashVal];
@@ -65,9 +71,7 @@ public:
         }
 
         n_nodes++;
-        if (isNegative) rn = RealNumber::setNegativePointer(rn);
-
-        return rn;
+        return isNegative ? RealNumber::setNegativePointer(rn) : rn;
 
     }
 

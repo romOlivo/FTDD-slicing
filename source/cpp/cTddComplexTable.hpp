@@ -124,10 +124,13 @@ private:
 
     // Search for a given complex value if there is an object in the table that represents it.
     Complex* searchTable(const std::size_t& hashVal, std::complex<dataType> value) {
+        RealNumber* r_real = real_number_unique_table.find_or_add(value.real());
+        RealNumber* r_imag = real_number_unique_table.find_or_add(value.imag());
+        std::complex<dataType> canon_value(RealNumber::getValue(r_real), RealNumber::getValue(r_imag));
         Complex* find_complex = nullptr;
         Complex* complex = table[hashVal];
         while (complex != nullptr) {
-            if (complex != nullptr && complex->getValue() == value) {
+            if (complex != nullptr && complex->getValue() == canon_value) {
                 find_complex = complex;
                 break;
             }

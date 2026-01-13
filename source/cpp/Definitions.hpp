@@ -42,6 +42,6 @@ extern dataType epi_inv;
 // two-level quantum system
 extern uint succ_num;
 
-constexpr double TOLERANCE = 1e-12;;
+constexpr double TOLERANCE = 1e-14;
 
 #endif
