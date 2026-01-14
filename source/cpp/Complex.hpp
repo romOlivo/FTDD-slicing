@@ -24,7 +24,11 @@ public:
     Complex* operator/(Complex b) {
         return new Complex(getValue() / b.getValue());
     }
-
+/*
+    inline bool operator==(const Complex& other) noexcept {
+        return value_real == other.getRealValue() && value_imaginary == other.getImaginaryValue();
+    }
+*/
     std::complex<dataType> getValue() {
         return std::complex<dataType>(RealNumber::getValue(value_real), RealNumber::getValue(value_imaginary));
     }
@@ -33,12 +37,25 @@ public:
         return getValue();
     }
 
-    void setRealValue(RealNumber* new_value_real) {
+    inline void setFullRealValue(RealNumber* new_value_real, RealNumber* new_value_imaginary) noexcept {
         value_real = new_value_real;
+        value_imaginary = new_value_imaginary;
+    }
+
+    RealNumber* getRealValue() const noexcept {
+        return value_real;
     }
 
     void setImaginaryValue(RealNumber* new_value_imaginary) {
         value_imaginary = new_value_imaginary;
+    }
+
+    RealNumber* getImaginaryValue() const noexcept {
+        return value_imaginary;
+    }
+
+    void setRealValue(RealNumber* new_value_real) {
+        value_real = new_value_real;
     }
 
     static std::complex<dataType> getValue(Complex* c) {

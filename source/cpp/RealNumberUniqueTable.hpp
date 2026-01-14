@@ -47,18 +47,15 @@ public:
         RealNumber* prev = nullptr;
         RealNumber* current = table[hashVal];
 
-        // Búsqueda ordenada exacta
         while (current != nullptr && current->getValue() < canon_value) {
             prev = current;
             current = current->next;
         }
 
-        // Nodo encontrado exactamente
         if (current != nullptr && current->getValue() == canon_value) {
             return isNegative ? RealNumber::setNegativePointer(current) : current;
         }
 
-        // Crear nuevo nodo
         RealNumber* rn = pool.get();
         rn->setVal(canon_value);
 

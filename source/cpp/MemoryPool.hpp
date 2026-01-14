@@ -13,6 +13,7 @@ class MemoryPool {
 
 public:
     MemoryPool() = default;
+    size_t block_size = BLOCK_SIZE;
 
     // Obtener un nodo del pool
     T* get() {
@@ -39,13 +40,15 @@ public:
 private:
     void allocateBlock() {
         // Reservamos un bloque contiguo
-        T* block = new T[BLOCK_SIZE];
+        T* block = new T[block_size];
         allocatedBlocks.push_back(block);
 
         // Añadimos todos los nodos al freeList
-        for (size_t i = 0; i < BLOCK_SIZE; ++i) {
+        for (size_t i = 0; i < block_size; ++i) {
             freeList.push_back(&block[i]);
         }
+
+        block_size = block_size * 2;
     }
 };
 

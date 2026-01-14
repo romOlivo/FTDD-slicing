@@ -27,10 +27,12 @@ public:
         if (value == value_one->getOriginalValue()) {
             return value_one;
         }
-        std::size_t hashVal = hash(value);
-        Complex* complex = searchTable(hashVal, value);
+        RealNumber* r_real = real_number_unique_table.find_or_add(value.real());
+        RealNumber* r_imag = real_number_unique_table.find_or_add(value.imag());
+        std::size_t hashVal = hash(r_real, r_imag);
+        Complex* complex = searchTable(hashVal, r_real, r_imag);
         if (complex == nullptr) {
-            complex = create_new_node(value);
+            complex = create_new_canon_node(r_real, r_imag);
             complex->next = table[hashVal];
             table[hashVal] = complex;
             n_nodes++;
@@ -39,10 +41,17 @@ public:
     }
 
     // Creates a new object that represents the complex number given.
+    inline Complex* create_new_canon_node(RealNumber* r_real, RealNumber* r_imag) {
+        Complex* c = pool.get();
+        c->setFullRealValue(r_real, r_imag);
+        return c;
+    }
+
+    // Creates a new object that represents the complex number given.
     Complex* create_new_node(std::complex<dataType> value) {
         Complex* c = pool.get();
         c->setValue(value);
-        return new Complex(value);
+        return c;
     }
 
     Complex* create_unsaved_new_node(std::complex<dataType> value) {
@@ -61,11 +70,7 @@ public:
     }
 
     long getNBuckets() {
-        long n_buckets = 0;
-        for (auto& bucket: table) {
-            n_buckets++;
-        }
-        return n_buckets;
+        return table.size();
     }
 
     // @romOlivo: Gets a string with more info about the performance and usage of the Unique Table
@@ -107,30 +112,27 @@ public:
 private:
 
     // Definition of the hashing function for complex numbers
-    std::size_t hash(std::complex<dataType> value) {
-        dataType real = value.real();
-        dataType imag = value.imag();
+    inline std::size_t hash(RealNumber* r_real, RealNumber* r_imag) noexcept {
+        std::uint64_t pr = reinterpret_cast<std::uint64_t>(r_real);
+        std::uint64_t pi = reinterpret_cast<std::uint64_t>(r_imag);
 
-        std::uint64_t r, i;
-        std::memcpy(&r, &real, sizeof(r));
-        std::memcpy(&i, &imag, sizeof(i));
+        pr ^= (pr >> 33);
+        pi ^= (pi >> 33);
 
-        std::size_t h = fnv_offset_basis;
-        h ^= r; h *= fnv_prime;
-        h ^= i; h *= fnv_prime;
+        std::uint64_t h = pr * 0xff51afd7ed558ccdULL;
+        h ^= pi * 0xc4ceb9fe1a85ec53ULL;
 
-        return h & MASK;
+        h ^= (h >> 33);
+
+        return static_cast<std::size_t>(h & MASK);
     }
 
     // Search for a given complex value if there is an object in the table that represents it.
-    Complex* searchTable(const std::size_t& hashVal, std::complex<dataType> value) {
-        RealNumber* r_real = real_number_unique_table.find_or_add(value.real());
-        RealNumber* r_imag = real_number_unique_table.find_or_add(value.imag());
-        std::complex<dataType> canon_value(RealNumber::getValue(r_real), RealNumber::getValue(r_imag));
+    Complex* searchTable(const std::size_t& hashVal, RealNumber* r_real, RealNumber* r_imag) {
         Complex* find_complex = nullptr;
         Complex* complex = table[hashVal];
         while (complex != nullptr) {
-            if (complex != nullptr && complex->getValue() == canon_value) {
+            if (complex != nullptr && complex->getRealValue() == r_real && complex->getImaginaryValue() == r_imag) {
                 find_complex = complex;
                 break;
             }
@@ -141,7 +143,7 @@ private:
 
     // Add an already created object representing a complex
     void Add_Basic_Numbers(Complex* number) {
-        std::size_t hashVal = hash(number->getOriginalValue());
+        std::size_t hashVal = hash(number->getRealValue(), number->getImaginaryValue());
         number->next = table[hashVal];
         table[hashVal] = number;
         n_nodes++;
