@@ -3,7 +3,7 @@
 
 #include "Definitions.hpp"
 
-class alignas(2) RealNumber {
+class RealNumber {
 
 public:
     /*
@@ -18,49 +18,47 @@ public:
         setVal(newValue);
     }
 
-    inline double getValue() {
+    inline double getValue() const noexcept {
         return value;
     }
 
-    void setVal(double newValue) {
-        value = std::abs(newValue);
+    inline void setVal(double newValue) noexcept {
+        value = (newValue < 0) ? -newValue : newValue;
     }
 
-    void setValUnsafe(double newValue) {
+    inline void setValUnsafe(double newValue) noexcept {
         value = newValue;
     }
 
-    static RealNumber* setValue(RealNumber* rn, double value) {
-        rn->setVal(value);
-        if (value < 0) {
-            rn = setNegativePointer(rn);
+    static inline RealNumber* setValue(RealNumber* rn, double newValue) noexcept {
+        const bool neg = newValue < 0.0;
+        rn->value = neg ? -newValue : newValue;
+        if (neg) {
+            rn = reinterpret_cast<RealNumber*>(
+                reinterpret_cast<uintptr_t>(rn) | 1ULL
+            );
         }
         return rn;
     }
 
-    static double getValue(RealNumber* rn) {
-        assert(rn != nullptr);
-        if (isRealNumberNegative(rn)) {
-            rn = getNegativePointer(rn);
-            return -rn->getValue();
-        }
-        return rn->getValue();
+    static inline double getValue(const RealNumber* rn) noexcept {
+        uintptr_t addr = reinterpret_cast<uintptr_t>(rn);
+        const bool neg = addr & 1ULL;
+        rn = reinterpret_cast<const RealNumber*>(addr & ~1ULL);
+        const double val = rn->value;
+        return neg ? -val : val;
     }
 
-    static bool isRealNumberNegative(RealNumber* rn) {
-        return (reinterpret_cast<uintptr_t>(rn) & 1) != 0;
+    static inline bool isRealNumberNegative(RealNumber* rn) noexcept {
+        return reinterpret_cast<uintptr_t>(rn) & 1ULL;
     }
 
-    static RealNumber* setNegativePointer(RealNumber* rn) {
-        return reinterpret_cast<RealNumber*>(
-             reinterpret_cast<uintptr_t>(rn) | 1
-         );
+    static inline RealNumber* setNegativePointer(RealNumber* rn) noexcept {
+        return reinterpret_cast<RealNumber*>(reinterpret_cast<uintptr_t>(rn) | 1ULL);
     }
 
-    static RealNumber* getNegativePointer(RealNumber* rn) {
-        return reinterpret_cast<RealNumber*>(
-             reinterpret_cast<uintptr_t>(rn) & ~uintptr_t(1)
-         );
+    static inline RealNumber* getNegativePointer(RealNumber* rn) noexcept {
+        return reinterpret_cast<RealNumber*>(reinterpret_cast<uintptr_t>(rn) & ~1ULL);
     }
 
     RealNumber* next;
