@@ -21,15 +21,20 @@ public:
         value_imaginary = real_number_unique_table.find_or_add(new_value.imag());
     }
 
-    Complex* operator/(Complex b) {
-        return new Complex(getValue() / b.getValue());
+    Complex* operator/(const Complex& b) {
+        std::complex<dataType> a_val(RealNumber::getValue(value_real),
+                                     RealNumber::getValue(value_imaginary));
+        std::complex<dataType> b_val(RealNumber::getValue(b.value_real),
+                                     RealNumber::getValue(b.value_imaginary));
+        std::complex<dataType> result = a_val / b_val;
+        return new Complex(result);
     }
-/*
-    inline bool operator==(const Complex& other) noexcept {
-        return value_real == other.getRealValue() && value_imaginary == other.getImaginaryValue();
+
+    inline bool operator==(const Complex& other) {
+        return this == &other || (value_real == other.getRealValue() && value_imaginary == other.getImaginaryValue());
     }
-*/
-    std::complex<dataType> getValue() {
+
+    std::complex<dataType> getValue() const {
         return std::complex<dataType>(RealNumber::getValue(value_real), RealNumber::getValue(value_imaginary));
     }
 
@@ -42,19 +47,19 @@ public:
         value_imaginary = new_value_imaginary;
     }
 
-    RealNumber* getRealValue() const noexcept {
+    inline RealNumber* getRealValue() const noexcept {
         return value_real;
     }
 
-    void setImaginaryValue(RealNumber* new_value_imaginary) {
+    inline void setImaginaryValue(RealNumber* new_value_imaginary) noexcept {
         value_imaginary = new_value_imaginary;
     }
 
-    RealNumber* getImaginaryValue() const noexcept {
+    inline RealNumber* getImaginaryValue() const noexcept {
         return value_imaginary;
     }
 
-    void setRealValue(RealNumber* new_value_real) {
+    inline void setRealValue(RealNumber* new_value_real) noexcept {
         value_real = new_value_real;
     }
 

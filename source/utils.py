@@ -9,7 +9,6 @@ def generate_ftdd_data():
                   to analyze and check all the metrics.
     """
     import source.cpp.build.cTDD as cTDD
-    print(cTDD.get_count())
     # Unique Table Metrics
     unique_hits = int(cTDD.get_count().split("\n")[0].split(" / ")[0].split("node: ")[1])
     unique_calls = int(cTDD.get_count().split("\n")[0].split(" / ")[1])
