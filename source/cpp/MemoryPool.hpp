@@ -7,16 +7,15 @@
 
 template <typename T>
 class MemoryPool {
-    std::vector<T*> freeList;          // nodos disponibles
-    std::vector<T*> allocatedBlocks;   // bloques completos para liberar al final
-    static constexpr size_t BLOCK_SIZE = 1024; // número de nodos por bloque
+    std::vector<T*> freeList;
+    std::vector<T*> allocatedBlocks;
+    static constexpr size_t BLOCK_SIZE = 1024;
 
 public:
     MemoryPool() = default;
     size_t block_size = BLOCK_SIZE;
 
-    // Obtener un nodo del pool
-    T* get() {
+    T* get() noexcept {
         if (freeList.empty()) {
             allocateBlock();
         }
@@ -25,30 +24,29 @@ public:
         return node;
     }
 
-    // Devolver un nodo al pool
-    void release(T* node) {
+    void release(T* node) noexcept {
         freeList.push_back(node);
     }
 
-    // Liberar toda la memoria
     ~MemoryPool() {
         for (auto* block : allocatedBlocks) {
-            delete[] block;
+            ::operator delete[](block, std::align_val_t(64));
         }
     }
 
 private:
-    void allocateBlock() {
-        // Reservamos un bloque contiguo
-        T* block = new T[block_size];
+    void allocateBlock() noexcept {
+        T* block = static_cast<T*>(
+            ::operator new[](block_size * sizeof(T), std::align_val_t(64))
+        );
         allocatedBlocks.push_back(block);
 
-        // Añadimos todos los nodos al freeList
+        freeList.reserve(freeList.size() + block_size);
         for (size_t i = 0; i < block_size; ++i) {
-            freeList.push_back(&block[i]);
+            freeList.emplace_back(&block[i]);
         }
 
-        block_size = block_size * 2;
+        block_size = block_size + BLOCK_SIZE;
     }
 };
 
