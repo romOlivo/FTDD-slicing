@@ -119,7 +119,7 @@ public:
 private:
 
     // Creates or reuses a object with the given real value
-    RealNumber* create_new_real_number(double value) {
+    RealNumber* create_new_real_number(double value) noexcept {
         RealNumber* rn = pool.get();
         rn->setVal(value);
         rn->next = nullptr;

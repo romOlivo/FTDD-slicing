@@ -191,7 +191,7 @@ public:
         Hash functions
     */
     // FNV-1a
-    std::size_t hash(Node* node1, Node* node2, const std::vector<keyType>& key_2_new_key_1, const std::vector<keyType>& key_2_new_key_2) {
+    std::size_t hash(Node* node1, Node* node2, const std::vector<keyType>& key_2_new_key_1, const std::vector<keyType>& key_2_new_key_2) noexcept {
         hashType hash = fnv_offset_basis;
 
         // hash the node shared pointers
