@@ -594,57 +594,57 @@ Edge Slicing2(const Edge& edge, const keyType& x, const int& c) {
 }
 
 
-// TDD Addition
 Edge add(const Edge& edge1, const Edge& edge2) {
-    Edge res;
-    keyType k1 = edge1.node->key;
-    keyType k2 = edge2.node->key;
+    const std::complex<dataType>& w1 = edge1.weight->getValue();
+    const std::complex<dataType>& w2 = edge2.weight->getValue();
 
     // Terminal cases
-    if (edge1.weight->getValue() == std::complex<dataType>(0.0, 0.0)) { // Left operand is zero
-        return edge2;
-    }
-    if (edge2.weight->getValue() == std::complex<dataType>(0.0, 0.0)) { // right operand is zero
-        return edge1;
-    }
-    if (edge1.node == edge2.node) { // two operands are the same
-        std::complex<dataType> weig = edge1.weight->getValue() + edge2.weight->getValue();
-        if (get_int_key(weig) == std::tuple<int, int>(0, 0)) { // result is 0
-            res = Edge(node_n1);
+
+    if (w1 == std::complex<dataType>(0.0, 0.0)) return edge2;
+    if (w2 == std::complex<dataType>(0.0, 0.0)) return edge1;
+
+    const keyType k1 = edge1.node->key;
+    const keyType k2 = edge2.node->key;
+
+    if (edge1.node == edge2.node) {
+        std::complex<dataType> wsum = w1 + w2;
+        if (get_int_key(wsum) == std::tuple<int, int>(0, 0)) {
+            Edge res(node_n1);
             res.weight = value_zero;
             return res;
-        } else {
-            res = Edge(edge1.node);
-            res.weight = complex_table.create_unsaved_new_node(weig);
-            return res;
         }
+        Edge res(edge1.node);
+        res.weight = complex_table.create_unsaved_new_node(wsum);
+        return res;
     }
 
     // Query addition computed table
-    Edge find_add = add_computed_table.find(edge1, edge2);
-    if (find_add.node != nullptr) { return find_add; }
+    Edge cached = add_computed_table.find(edge1, edge2);
+    if (cached.node != nullptr) return cached;
 
     // Recursive addition
-    std::vector<Edge> the_successors(succ_num); keyType x;
+    Edge succs[succ_num];
+    keyType x;
+
     if (k1 > k2) {
         x = k1;
-        for (uint k = 0; k < succ_num; k++) {
-            the_successors[k] = add(Slicing2(edge1, x, k), edge2);
+        for (uint k = 0; k < succ_num; ++k) {
+            succs[k] = add(Slicing2(edge1, x, k), edge2);
         }
     } else if (k1 == k2) {
         x = k1;
-        for (uint k = 0; k < succ_num; k++) {
-            the_successors[k] = add(Slicing2(edge1, x, k), Slicing2(edge2, x, k));
+        for (uint k = 0; k < succ_num; ++k) {
+            succs[k] = add(Slicing2(edge1, x, k), Slicing2(edge2, x, k));
         }
-    } else {
+    } else { // k2 > k1
         x = k2;
-        for (uint k = 0; k < succ_num; k++) {
-            the_successors[k] = add(edge1, Slicing2(edge2, x, k));
+        for (uint k = 0; k < succ_num; ++k) {
+            succs[k] = add(edge1, Slicing2(edge2, x, k));
         }
     }
 
     // Normalization and insertion to addition computed table
-    res = normalize(x, the_successors);
+    Edge res = normalize(x, {succs[0], succs[1]});
     add_computed_table.insert(edge1, edge2, res);
 
     return res;
@@ -738,7 +738,6 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in,
         std::complex<dataType> w = w1 * w2;
         if (cont_num > 0) w *= std::pow(2, cont_num);
 
-        // NO insertamos en complex_table aquí — aún no normalizado
         res = Edge(node_n1);
         res.weight = complex_table.create_unsaved_new_node(w);
         return res;
@@ -770,7 +769,7 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in,
     Edge edge1 = edge1_in; edge1.weight = value_one;
     Edge edge2 = edge2_in; edge2.weight = value_one;
 
-    // Lookup contraction cache (sin copias de sub-vectores)
+    // Lookup contraction cache
     Edge cached = cont_computed_table.find(edge1.node, edge2.node,
                                            key_2_new_key_0, key_2_new_key_1);
     if (cached.node != nullptr) {
@@ -839,11 +838,10 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in,
         }
     }
 
-    // Insert into contraction cache (solo después de normalizar)
+    // Insert into contraction cache
     cont_computed_table.insert(edge1.node, edge2.node,
                                key_2_new_key_0, key_2_new_key_1, res);
 
-    // Aplicamos los pesos originales (sin insertar en tabla)
     std::complex<dataType> w = res.weight->getValue() * w1 * w2;
     res.weight = complex_table.create_unsaved_new_node(w);
     return res;
