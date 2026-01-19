@@ -248,33 +248,28 @@ class TDD:
             return False
 
 
-def equal_tolerance(data1, data2):
+def equal_tolerance(data1, data2, rtol=1e-13, atol=1e-13):
+    from qiskit.quantum_info import Statevector
     """
-        @romOlivo: Compares 2 data structures (tdd or matrices) with some tolerance in the result
+    Compares two QTDD output arrays (or TDD objects) up to global phase.
+    Usa Qiskit's Statevector.equiv bajo el capó.
     """
-    def is_not_array(data):
-        import collections.abc
-        return not hasattr(data, "__len__") and not isinstance(data, collections.abc.Sequence)
+    import numpy as np
 
-    if is_not_array(data1):
-        if is_not_array(data2):
-            # print(f" checking {data1} and {data2} --- Result: {data1 == data2}")
-            return data1 == data2
-        else:
-            return False
-    # print(f"d1: {data1} --- d2: {data2}")
-    matrix1 = data1
-    if isinstance(data1, TDD):
-        matrix1 = data1.to_array()
-    matrix2 = data2
-    if isinstance(data2, TDD):
-        matrix2 = data2.to_array()
-    m1 = np.round(matrix1, n_decimals_of_tolerance)
-    m2 = np.round(matrix2, n_decimals_of_tolerance)
-    if len(m1) != len(m2):
-        return False
-    # print(f"Checking {m1} with {m2}")
-    return (equal_tolerance(m1[0], m2[0]) and equal_tolerance(m1[1], m2[1])) or (equal_tolerance(m1[0], m2[1]) and equal_tolerance(m1[1], m2[0]))
+    # Convert a TDD to array, o pasar directamente si es lista/matriz
+    mat1 = data1.to_array() if hasattr(data1, "to_array") else np.array(data1, dtype=complex)
+    mat2 = data2.to_array() if hasattr(data2, "to_array") else np.array(data2, dtype=complex)
+
+    # Aplanar matrices para comparar como vectores
+    vec1 = mat1.flatten()
+    vec2 = mat2.flatten()
+
+    # Crear estados Qiskit
+    sv1 = Statevector(vec1)
+    sv2 = Statevector(vec2)
+
+    # Equivalencia hasta fase global
+    return sv1.equiv(sv2, rtol=rtol, atol=atol)
 
 
 def layout(node, key_2_idx, dot=Digraph(), succ=[], real_label=True):

@@ -440,34 +440,38 @@ TDD get_identity_tdd() {
 
 // Normalization
 Edge normalize(const keyType& x, const std::vector<Edge>& the_successors) {
-    // Check if the two successors are the same, if so, return directly the successor
-    if (the_successors[0] == the_successors[1]) { return the_successors[0]; }
+    if (the_successors[0] == the_successors[1]) {
+        return the_successors[0];
+    }
 
-    // Copy the successors
-    std::vector<Edge> edges = the_successors;
+    const Edge& s0 = the_successors[0];
+    const Edge& s1 = the_successors[1];
 
-    // Calculate absolute weights and find the max of two weights. Here we are taking the left weight if they equal, same as Python
-    dataType weigs_abs0 = std::round(std::abs(edges[0].weight->getValue()) * epi_inv);
-    dataType weigs_abs1 = std::round(std::abs(edges[1].weight->getValue()) * epi_inv);
-    std::complex<dataType> weig_max;
-    if (weigs_abs0 >= weigs_abs1) { weig_max = edges[0].weight->getValue(); } else { weig_max = edges[1].weight->getValue(); }
+    Complex* weig_max_ptr = (std::abs(s0.weight->getValue()) >= std::abs(s1.weight->getValue()))
+                             ? s0.weight : s1.weight;
+    const std::complex<dataType> weig_max_val = weig_max_ptr->getValue();
 
-    // Normalize the node
-    for (uint k = 0; k < succ_num; k++) {
-        edges[k].weight = complex_table.Find_Or_Add(edges[k].weight->getValue() / weig_max);
+    Edge norm_edges[2] = { s0, s1 };
 
-        // Check if any of the successor has zero weight
-        if (get_int_key(edges[k].weight->getValue()) == std::tuple<int, int>(0, 0)) {
-            edges[k].node = node_n1;
-            edges[k].weight = value_zero;
+    for (uint k = 0; k < 2; ++k) {
+        std::complex<dataType> new_val = norm_edges[k].weight->getValue() / weig_max_val;
+        norm_edges[k].weight = complex_table.Find_Or_Add(new_val);
+
+        if (get_int_key(norm_edges[k].weight->getValue()) == std::tuple<int,int>(0,0)) {
+            norm_edges[k].node = node_n1;
+            norm_edges[k].weight = value_zero;
         }
     }
 
-    // Find or insert the new node to unique table
-    Edge res = Edge(unique_table.Find_Or_Add_Unique_table(x, edges));
-    res.weight = complex_table.Find_Or_Add(weig_max);
+    Node* norm_node = unique_table.Find_Or_Add_Unique_table(x, {norm_edges[0], norm_edges[1]});
+
+    Edge res(norm_node);
+    res.weight = weig_max_ptr;
     return res;
 }
+
+
+
 
 
 // The get_tdd() function 
