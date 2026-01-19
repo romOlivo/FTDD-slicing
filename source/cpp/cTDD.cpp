@@ -713,137 +713,138 @@ TDD cont(TDD& tdd1, TDD& tdd2) {
     return tdd;
 }
 
-Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyType>& key_2_new_key_0, const std::vector<keyType>& key_2_new_key_1, const std::vector<int>& cont_order_0, const std::vector<int>& cont_order_1, const int& cont_num) {
+// TDD contraction
+Edge contract(const Edge& edge1_in, const Edge& edge2_in,
+              const std::vector<keyType>& key_2_new_key_0,
+              const std::vector<keyType>& key_2_new_key_1,
+              const std::vector<int>& cont_order_0,
+              const std::vector<int>& cont_order_1,
+              const int& cont_num) {
+
     Edge res;
 
-    keyType k1 = edge1_in.node->key;
-    keyType k2 = edge2_in.node->key;
-    std::complex<dataType> w1 = edge1_in.weight->getValue();
-    std::complex<dataType> w2 = edge2_in.weight->getValue();
+    const keyType k1 = edge1_in.node->key;
+    const keyType k2 = edge2_in.node->key;
+    const std::complex<dataType> w1 = edge1_in.weight->getValue();
+    const std::complex<dataType> w2 = edge2_in.weight->getValue();
 
-    // Terminal case 1: Both inputs are terminal nodes
-    if ((k1 == -1) && (k2 == -1)) {
-        if (w1 == std::complex<dataType>(0.0, 0.0)) {
-            res = Edge(edge1_in.node);
+    // --- Terminal Case 1: both terminal nodes
+    if (k1 == -1 && k2 == -1) {
+        if (w1 == std::complex<dataType>(0.0, 0.0) || w2 == std::complex<dataType>(0.0, 0.0)) {
+            res = Edge(node_n1);
             res.weight = value_zero;
             return res;
         }
-        if (w2 == std::complex<dataType>(0.0, 0.0)) {
-            res = Edge(edge1_in.node);
-            res.weight = value_zero;
-            return res;
-        }
-        res = Edge(edge1_in.node);
         std::complex<dataType> w = w1 * w2;
-        if (cont_num > 0) { w *= std::pow(2, cont_num); }
+        if (cont_num > 0) w *= std::pow(2, cont_num);
+
+        // NO insertamos en complex_table aquí — aún no normalizado
+        res = Edge(node_n1);
         res.weight = complex_table.create_unsaved_new_node(w);
         return res;
     }
-    // Terminal case 2: If edge1 is terminal node
-    if (k1 == -1) {
-        if (w1 == std::complex<dataType>(0.0, 0.0)) {
-            res = Edge(edge1_in.node);
+
+    // --- Terminal Case 2 & 3
+    if (k1 == -1 || k2 == -1) {
+        const Edge& non_term = (k1 == -1) ? edge2_in : edge1_in;
+        const std::complex<dataType>& wt = (k1 == -1) ? w1 : w2;
+
+        if (wt == std::complex<dataType>(0.0, 0.0)) {
+            res = Edge(node_n1);
             res.weight = value_zero;
             return res;
         }
-        if ((cont_num == 0) && (key_2_new_key_1[k2] == k2)) {
-            res = Edge(edge2_in.node);
-            res.weight = complex_table.create_unsaved_new_node(w1 * w2);
-            return res;
-        }
-    }
-    // Terminal case 3: If edge2 is terminal node
-    if (k2 == -1) {
-        if (w2 == std::complex<dataType>(0.0, 0.0)) {
-            res = Edge(edge2_in.node);
-            res.weight = value_zero;
-            return res;
-        }
-        if ((cont_num == 0) && (key_2_new_key_0[k1] == k1)) {
-            res = Edge(edge1_in.node);
-            res.weight = complex_table.create_unsaved_new_node(w1 * w2);
+
+        keyType k_non = non_term.node->key;
+        const std::vector<keyType>& key_new = (k1 == -1) ? key_2_new_key_1 : key_2_new_key_0;
+
+        if (cont_num == 0 && key_new[k_non] == k_non) {
+            res = Edge(non_term.node);
+            std::complex<dataType> w = w1 * w2;
+            res.weight = complex_table.create_unsaved_new_node(w); // temporal
             return res;
         }
     }
 
-    // Normalize input tdds' weights to 1 for contraction computed table query
+    // --- Normalization for lookup
     Edge edge1 = edge1_in; edge1.weight = value_one;
     Edge edge2 = edge2_in; edge2.weight = value_one;
 
-    // key_2_new_key for the curent level of recursion
-    std::vector<keyType> temp_key_2_new_key_0(key_2_new_key_0.begin(), key_2_new_key_0.begin() + k1 + 1);
-    std::vector<keyType> temp_key_2_new_key_1(key_2_new_key_1.begin(), key_2_new_key_1.begin() + k2 + 1);
-
-    // Query contraction computed table
-    Edge find_cont = cont_computed_table.find(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1);
-    if (find_cont.node != nullptr) {
-        res = find_cont;
-        std::complex<dataType> w = res.weight->getValue();
-        w *= w1 * w2;
-        res.weight = complex_table.create_unsaved_new_node(w);
+    // Lookup contraction cache (sin copias de sub-vectores)
+    Edge cached = cont_computed_table.find(edge1.node, edge2.node,
+                                           key_2_new_key_0, key_2_new_key_1);
+    if (cached.node != nullptr) {
+        res = cached;
+        std::complex<dataType> w = res.weight->getValue() * w1 * w2;
+        res.weight = complex_table.create_unsaved_new_node(w); // temporal, no se guarda aún
         return res;
     }
 
-    // Recursive contraction
-    std::vector<Edge> the_successors(succ_num); keyType the_key;
-    if (cont_order_0[k1+1] < cont_order_1[k2+1]) { // edge1 is now on top of edge2
+    // --- Recursive contraction
+    Edge succs[succ_num];
+    keyType the_key;
+
+    const int order_diff = cont_order_0[k1+1] - cont_order_1[k2+1];
+
+    if (order_diff < 0) { // edge1 on top
         the_key = key_2_new_key_0[k1];
-        if (the_key != -2) { // if x not in var
-            for (uint k = 0; k < succ_num; k++) {
-                the_successors[k] = contract(Slicing(edge1, k1, k), edge2, key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num);
-            }
-            res = normalize(the_key, the_successors);
-            cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
-            std::complex<dataType> w = res.weight->getValue();
-            w *= w1 * w2;
-            res.weight = complex_table.create_unsaved_new_node(w);
-        } else { // if x in var
-            res = add(contract(Slicing(edge1, k1, 0), edge2, key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1), 
-                      contract(Slicing(edge1, k1, 1), edge2, key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1));
-            cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
-            std::complex<dataType> w = res.weight->getValue();
-            w *= w1 * w2;
-            res.weight = complex_table.create_unsaved_new_node(w);
+        if (the_key != -2) {
+            for (uint k = 0; k < succ_num; ++k)
+                succs[k] = contract(Slicing(edge1, k1, k), edge2,
+                                    key_2_new_key_0, key_2_new_key_1,
+                                    cont_order_0, cont_order_1, cont_num);
+            res = normalize(the_key, {succs[0], succs[1]});
+        } else {
+            Edge e0 = contract(Slicing(edge1, k1, 0), edge2,
+                               key_2_new_key_0, key_2_new_key_1,
+                               cont_order_0, cont_order_1, cont_num - 1);
+            Edge e1 = contract(Slicing(edge1, k1, 1), edge2,
+                               key_2_new_key_0, key_2_new_key_1,
+                               cont_order_0, cont_order_1, cont_num - 1);
+            res = add(e0, e1);
         }
-    } else if (cont_order_0[k1+1] == cont_order_1[k2+1]) { // Two tdds get to the same index
+    } else if (order_diff == 0) { // same level
         the_key = key_2_new_key_0[k1];
-        if (the_key != -2) { // if x not in var
-            for (uint k = 0; k < succ_num; k++) {
-                the_successors[k] = contract(Slicing(edge1, k1, k), Slicing(edge2, k2, k), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num);
-            }
-            res = normalize(the_key, the_successors);
-            cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
-            std::complex<dataType> w = res.weight->getValue();
-            w *= w1 * w2;
-            res.weight = complex_table.create_unsaved_new_node(w);
-        } else { // if x in var
-            res = add(contract(Slicing(edge1, k1, 0), Slicing(edge2, k2, 0), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1), 
-                      contract(Slicing(edge1, k1, 1), Slicing(edge2, k2, 1), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1));
-            cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
-            std::complex<dataType> w = res.weight->getValue();
-            w *= w1 * w2;
-            res.weight = complex_table.create_unsaved_new_node(w);
+        if (the_key != -2) {
+            for (uint k = 0; k < succ_num; ++k)
+                succs[k] = contract(Slicing(edge1, k1, k), Slicing(edge2, k2, k),
+                                    key_2_new_key_0, key_2_new_key_1,
+                                    cont_order_0, cont_order_1, cont_num);
+            res = normalize(the_key, {succs[0], succs[1]});
+        } else {
+            Edge e0 = contract(Slicing(edge1, k1, 0), Slicing(edge2, k2, 0),
+                               key_2_new_key_0, key_2_new_key_1,
+                               cont_order_0, cont_order_1, cont_num - 1);
+            Edge e1 = contract(Slicing(edge1, k1, 1), Slicing(edge2, k2, 1),
+                               key_2_new_key_0, key_2_new_key_1,
+                               cont_order_0, cont_order_1, cont_num - 1);
+            res = add(e0, e1);
         }
-    } else { // edge2 is on top of edge1
+    } else { // edge2 on top
         the_key = key_2_new_key_1[k2];
-        if (the_key != -2) { // if x not in var
-            for (uint k = 0; k < succ_num; k++) {
-                the_successors[k] = contract(edge1, Slicing(edge2, k2, k), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num);
-            }
-            res = normalize(the_key, the_successors);
-            cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
-            std::complex<dataType> w = res.weight->getValue();
-            w *= w1 * w2;
-            res.weight = complex_table.create_unsaved_new_node(w);
-        } else { // if x in var
-            res = add(contract(edge1, Slicing(edge2, k2, 0), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1), 
-                      contract(edge1, Slicing(edge2, k2, 1), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1));
-            cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
-            std::complex<dataType> w = res.weight->getValue();
-            w *= w1 * w2;
-            res.weight = complex_table.create_unsaved_new_node(w);
+        if (the_key != -2) {
+            for (uint k = 0; k < succ_num; ++k)
+                succs[k] = contract(edge1, Slicing(edge2, k2, k),
+                                    key_2_new_key_0, key_2_new_key_1,
+                                    cont_order_0, cont_order_1, cont_num);
+            res = normalize(the_key, {succs[0], succs[1]});
+        } else {
+            Edge e0 = contract(edge1, Slicing(edge2, k2, 0),
+                               key_2_new_key_0, key_2_new_key_1,
+                               cont_order_0, cont_order_1, cont_num - 1);
+            Edge e1 = contract(edge1, Slicing(edge2, k2, 1),
+                               key_2_new_key_0, key_2_new_key_1,
+                               cont_order_0, cont_order_1, cont_num - 1);
+            res = add(e0, e1);
         }
     }
 
+    // Insert into contraction cache (solo después de normalizar)
+    cont_computed_table.insert(edge1.node, edge2.node,
+                               key_2_new_key_0, key_2_new_key_1, res);
+
+    // Aplicamos los pesos originales (sin insertar en tabla)
+    std::complex<dataType> w = res.weight->getValue() * w1 * w2;
+    res.weight = complex_table.create_unsaved_new_node(w);
     return res;
 }
