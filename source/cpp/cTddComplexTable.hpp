@@ -22,6 +22,21 @@ public:
         releaseTables();
     }
 
+    inline void release_complex(Complex* c) noexcept {
+        if (c->next == c) {
+            pool.release(c);
+        }
+    }
+
+    void release_all() noexcept {
+        while (temp != nullptr) {
+            pool.release(temp);
+            real_number_unique_table.release_number(temp->getRealValue());
+            real_number_unique_table.release_number(temp->getImaginaryValue());
+            temp = temp->next;
+        }
+    }
+
     // Finds in the complex table the object with the value searched. If not found, then adds a new one.
     Complex* Find_Or_Add(std::complex<dataType> value) {
         if (value == value_one->getOriginalValue()) {
@@ -48,20 +63,19 @@ public:
     }
 
     // Creates a new object that represents the complex number given.
-    Complex* create_new_node(std::complex<dataType> value) {
+    inline Complex* create_new_node(std::complex<dataType> value) {
         Complex* c = pool.get();
         c->setValue(value);
         return c;
     }
 
-    Complex* create_unsaved_new_node(std::complex<dataType> value) {
-        Complex* c = new Complex();
-        RealNumber* n = new RealNumber();
-        n->setValUnsafe(value.real());
-        c->setRealValue(n);
-        n = new RealNumber();
-        n->setValUnsafe(value.imag());
-        c->setImaginaryValue(n);
+    inline Complex* create_unsaved_new_node(std::complex<dataType> value) {
+        // return create_new_node(value);
+        Complex* c = pool.get();
+        c->setRealValue(real_number_unique_table.create_new_unsafe_real_number(value.real()));
+        c->setImaginaryValue(real_number_unique_table.create_new_unsafe_real_number(value.imag()));
+        c->next = temp;
+        temp = c;
         return c;
     }
 
@@ -175,6 +189,7 @@ private:
 
     // Parameters of the table
     std::size_t NBUCKET;
+    Complex* temp = nullptr;
     std::vector<Complex*> table{std::vector<Complex*>(0)};
     MemoryPool<Complex> pool;
     std::size_t MASK;

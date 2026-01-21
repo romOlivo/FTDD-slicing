@@ -710,6 +710,8 @@ TDD cont(TDD& tdd1, TDD& tdd2) {
     tdd.index_2_key = idx_2_key;
     tdd.key_2_index = key_2_idx;
 
+    complex_table.release_all();
+
     return tdd;
 }
 
@@ -843,6 +845,6 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in,
                                key_2_new_key_0, key_2_new_key_1, res);
 
     std::complex<dataType> w = res.weight->getValue() * w1 * w2;
-    res.weight = complex_table.create_unsaved_new_node(w);
+    res.weight = complex_table.create_new_node(w);
     return res;
 }

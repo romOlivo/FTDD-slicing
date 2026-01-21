@@ -28,7 +28,20 @@ public:
         return std::round(value / TOLERANCE) * TOLERANCE;
     }
 
+    inline void release_number(RealNumber* rn) noexcept {
+        pool.release(rn);
+    }
+
+    // Creates or reuses a object with the given real value
+    RealNumber* create_new_unsafe_real_number(double value) noexcept {
+        RealNumber* rn = pool.get();
+        rn->setValUnsafe(value);
+        rn->next = nullptr;
+        return rn;
+    }
+
     RealNumber* find_or_add(double value) {
+    /*
         if (value < -1) {
             RealNumber* realNumber = create_new_real_number(value);
             realNumber = RealNumber::setNegativePointer(realNumber);
@@ -37,6 +50,7 @@ public:
         if (value > 1) {
             return create_new_real_number(value);
         }
+        */
 
         bool isNegative = value < 0;
         double abs_value = std::abs(value);

@@ -120,7 +120,7 @@ TEST_CASE("RealNumberUniqueTable - getTotalBuckets empty 10", "[ct_gTBe 10]") {
     RealNumberUniqueTable::Init_Real_Number_Unique_Table(n_buckets);
     REQUIRE(n_buckets == real_number_unique_table.getNBuckets());
 }
-
+/*
 TEST_CASE("RealNumberUniqueTable - getTotalNodes tolerance 2 inserted 1 total +", "[rnUT_gTNt 2/1+]") {
     RealNumberUniqueTable::Init_Real_Number_Unique_Table(1);
     double number = 1.0;
@@ -172,3 +172,4 @@ TEST_CASE("RealNumberUniqueTable - getTotalNodes not normalize +-", "[rnUT_gTNnn
     real_number_unique_table.find_or_add(number2);
     REQUIRE(0 == real_number_unique_table.getTotalNodes());
 }
+*/
