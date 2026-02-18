@@ -17,14 +17,15 @@ import cotengra as ctg
 sys.path.append('./source/cpp/build/')
 import cTDD
 
-
 '''
     Utility functions
 '''
+
+
 def PyTN_2_cTN(tn_lbl):
     # Create cTDD tensor network
     cTN = cTDD.TensorNetwork(tn_lbl.tn_type, tn_lbl.qubits_num)
-    
+
     # Add tensors from PyTDD TN to cTDD TN
     for ts in tn_lbl.tensors:
         # Create C++ tensor
@@ -38,7 +39,7 @@ def PyTN_2_cTN(tn_lbl):
         cTensor = cTDD.Tensor(data, list(shape), index_key, index_idx, name, qubits_list, depth)
         # Add C++ Tensor to C++ TN
         cTN.add_tensor(cTensor, False)
-    
+
     return cTN
 
 
@@ -46,19 +47,20 @@ def PyTN_2_cTN(tn_lbl):
     Pick a quantum circuit for this demo 
 '''
 path = './Benchmarks/Verification/'
-file_name = sys.argv[1]
-cir = QuantumCircuit.from_qasm_file(path+file_name+'.qasm')
-cir.draw('mpl').savefig("./CircuitDiagrams/"+ file_name + ".png")
+# file_name = sys.argv[1]
+# file_name = "qnn_indep_qiskit_13"
+# file_name = "qftentangled_indep_qiskit_15"
+file_name = "qwalk_d1_7"
+cir = QuantumCircuit.from_qasm_file(path + file_name + '.qasm')
+cir.draw('mpl').savefig("./CircuitDiagrams/" + file_name + ".png")
 
-print('\nQuantum circuit: ', file_name+'.qasm\n')
-
+print('\nQuantum circuit: ', file_name + '.qasm\n')
 
 ''' 
     Circuit-to-TN Transpilation 
 '''
 tn_lbl, all_indexs_lbl, depth = cir_2_tn_lbl(cir)
 n = get_real_qubit_num(cir)
-
 
 ''' 
     Tetris-based Rank Simlification
@@ -68,11 +70,10 @@ tensors_tetris = squeezeTN_ultra(tensors_tetris, n, depth)
 tn_tetris = TensorNetwork(tensors_tetris, tn_lbl.tn_type, n)
 
 # Add initial state tensors
-input_s = [0]*n
+input_s = [0] * n
 if input_s:
-    add_inputs(tn_lbl,input_s,n)
-    add_inputs(tn_tetris,input_s,n)
-
+    add_inputs(tn_lbl, input_s, n)
+    add_inputs(tn_tetris, input_s, n)
 
 '''
     Contraction Order Search with Cotengra
@@ -92,17 +93,16 @@ opt = ctg.ReusableHyperOptimizer(
 )
 
 # Set-up for different optimizations
-  # Tetris = 0, Cotengra = 0
+# Tetris = 0, Cotengra = 0
 path_t0c0 = tn_lbl.get_seq_path()
-  # Tetris = 1, Cotengra = 0
+# Tetris = 1, Cotengra = 0
 path_t1c0 = tn_tetris.get_seq_path()
-  # Tetris = 0, Cotengra = 1
+# Tetris = 0, Cotengra = 1
 tree_t0c1 = opt.search(tensor_list_t0, open_indices_t0, size_dict_t0)
-path_t0c1 = tree_t0c1.get_path() 
-  # Tetris = 1, Cotengra = 1
+path_t0c1 = tree_t0c1.get_path()
+# Tetris = 1, Cotengra = 1
 tree_t1c1 = opt.search(tensor_list_t1, open_indices_t1, size_dict_t1)
 path_t1c1 = tree_t1c1.get_path()
-
 
 '''
     Test PyTDD
@@ -126,9 +126,6 @@ get_count()
 
 print('\n')
 
-
-
-
 '''
     Test FTDD
 '''
@@ -136,27 +133,27 @@ print("Test FTDD, t1c1")
 
 # cTDD Table parameters
 load_factor = 1
-alpha  = 2
+alpha = 2
 beta = alpha * load_factor
 
-NBUCKET = int(alpha * 2**n)
-INITIAL_GC_LIMIT = int(beta * 2**n)
+NBUCKET = int(alpha * 2 ** n)
+INITIAL_GC_LIMIT = int(beta * 2 ** n)
 INITIAL_GC_LUR = 0.9
 ACT_NBUCKET = 32768
 CCT_NBUCKET = 32768
-uniqTabConfig = [INITIAL_GC_LIMIT, INITIAL_GC_LUR, NBUCKET, ACT_NBUCKET, CCT_NBUCKET]
+uniqTabConfig = [INITIAL_GC_LIMIT, INITIAL_GC_LUR, NBUCKET, ACT_NBUCKET, CCT_NBUCKET, NBUCKET]
 
 # Initialize cTDD
 cTDD.Ini_TDD(all_indexs_lbl, uniqTabConfig, False)
 
 # Create cTDD tensor network
-# cTN = PyTN_2_cTN(tn_lbl)
-cTN = PyTN_2_cTN(tn_tetris)
+cTN = PyTN_2_cTN(tn_lbl)
+# cTN = PyTN_2_cTN(tn_tetris)
 
 # Contract TN in cTDD
 t1 = time.perf_counter()
-# ctdd = cTN.cont_TN(path_t0c0, False)
-ctdd = cTN.cont_TN(path_t1c1, False)
+ctdd = cTN.cont_TN(path_t0c0, False)
+# ctdd = cTN.cont_TN(path_t1c1, False)
 t2 = time.perf_counter()
 dt = t2 - t1
 print('FTDD contraction finished with time ', dt, 's')
@@ -168,18 +165,18 @@ print(cTDD.get_count())
 
 print('\n')
 
-
 ''' 
     Verify FTDD against PyTDD
 '''
+# print(ptdd.to_array())
+# print(ctdd.to_array())
 ptdd_ToTensor = np.transpose(ptdd.to_array())
 ctdd_ToTensor = tdd_to_tensor(ctdd.to_array(), ptdd.index_set)
 print("FTDD vs. PyTDD quantum state difference is ", np.average(np.abs(ptdd_ToTensor - ctdd_ToTensor)))
 fidelity = np.abs(np.inner(ptdd_ToTensor.flatten(), ctdd_ToTensor.flatten().conj()))
-print("FTDD vs. PyTDD fidelity is ", fidelity*100, "%")
+print("FTDD vs. PyTDD fidelity is ", fidelity * 100, "%")
 
 print('\n')
-
 
 ''' 
     Demo get_amplitude()
@@ -196,15 +193,14 @@ print("FTDD result amplitude for addr2 is ", ctdd.get_amplitude(addr2.copy()))
 
 print('\n')
 
-
 '''
     Demo measure()
 '''
 print("Demonstrate FTDD functionality for measuring samples")
 
-string = '0'*n
+string = '0' * n
 string_int = [int(i) for i in string]
-print("Theoretical probability for measuring ", string, " is ", abs(ptdd.get_amplitude(string_int))**2)
+print("Theoretical probability for measuring ", string, " is ", abs(ptdd.get_amplitude(string_int)) ** 2)
 
 n_sample = 1000000
 
@@ -213,7 +209,7 @@ for i in range(n_sample):
     sample_ptdd = ptdd.measure()
     if sample_ptdd == string:
         count_ptdd += 1
-print("PyTDD probability for measuring ", string, " is ", count_ptdd/n_sample)
+print("PyTDD probability for measuring ", string, " is ", count_ptdd / n_sample)
 
 ctdd.get_measure_prob()
 count_ctdd = 0
@@ -221,4 +217,4 @@ for i in range(n_sample):
     sample_ctdd = ctdd.measure()
     if sample_ctdd == string:
         count_ctdd += 1
-print("FTDD probability for measuring ", string, " is ", count_ctdd/n_sample)
+print("FTDD probability for measuring ", string, " is ", count_ctdd / n_sample)
