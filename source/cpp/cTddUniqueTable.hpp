@@ -5,6 +5,10 @@
  * Modifications by Qirui Zhang (qiruizh@umich.edu) for FTDD (https://github.com/QiruiZhang/FTDD)
  *   - Adapted for TDD
  *   - Changed hash function to FNV
+ *
+ * Modified by Vicente Lopez (voliva@uji.es). Modifications will be marked with @romOlivo.
+ *   - Using 'available' nodes when it is possible.
+ *   - Implemented 'get_size_table' for more info about UniqueTable
  */
 
 
@@ -64,6 +68,40 @@ public:
             bucket = nullptr;  
         }
     }
+
+    // @romOlivo: Gets a string with more info about the performance and usage of the Unique Table
+    std::string get_performance_metrics() {
+        int max_length = 0;
+        int n_buckets = 0;
+        int n_nodes = 0;
+        float mean_nodes = 0;
+        int n_buckets_used = 0;
+        float mean_used_nodes = 0;
+        for (auto& bucket: tables) {
+            int partial_length = 0;
+            n_buckets++;
+            Node* current = bucket;
+            while (current) {
+                current = current->next;
+                partial_length++;
+                n_nodes++;
+            }
+            if (partial_length > max_length) {
+                max_length = partial_length;
+            }
+            if (partial_length > 0) {
+                n_buckets_used++;
+            }
+            mean_nodes = mean_nodes + partial_length;
+        }
+        mean_used_nodes = mean_nodes / n_buckets_used;
+        mean_nodes = mean_nodes / n_buckets;
+        std::ostringstream oss;
+        oss << "Max length buckets: " << max_length << " / Mean nodes x bucket: " << mean_nodes
+            << " / Mean nodes x used bucket: " << mean_used_nodes << "\n";
+        return oss.str();
+    }
+
 
     // Clear everything
     void clear() {
@@ -170,7 +208,15 @@ public:
             return find_node;
         } else { // if node not found
             // Get a new node
-            Node* res = new Node();
+            Node* res;
+            // @romOlivo: This part was modified, so now available nodes can be used when it is possible.
+            if (available != nullptr) {
+                res = available;
+                available = available->next;
+                res->next = nullptr;
+            } else {
+                res = new Node();
+            }
             res->key = v;
             res->edges = edges;
             res->refCnt = 0;

@@ -1,62 +1,113 @@
-'''
+"""
 Original code from TDD (https://github.com/Veriqc/TDD)
 
 Modifications by Qirui Zhang (qiruizh@umich.edu) for FTDD (https://github.com/QiruiZhang/FTDD)
     - See comments in the TensorNetwork class for added functions
     - Line #143 and beyond
-'''
+
+Modified by Vicente Lopez (voliva@uji.es). Modifications will be marked with @romOlivo. Also added some comments to
+make the code more understandable.
+"""
 
 import numpy as np
-from TDD import Index, get_tdd,get_identity_tdd, cont
+from source.TDD import Index, get_tdd, get_identity_tdd, cont
 
 # import Google TensorNetwork
 import tensornetwork as gtn
+
 gtn.set_default_backend("pytorch")
 
 
 class Tensor:
-    def __init__(self,data=[],index=[],name=None,qubits=None,depth=0):
-        self.data=data
-        self.index_set=index
-        self.name=name
-        self.qubits=qubits 
-        self.depth=depth 
-    
-    def tdd(self): 
-        return get_tdd(self.data,self.index_set)   
+    def __init__(self, data=[], index=None, name=None, qubits=None, depth=0):
+        if index is None:
+            index = []
+        self.data = data
+        self.index_set = index
+        self.name = name
+        self.qubits = qubits
+        self.depth = depth
 
-    def __eq__(self,other): 
+    def tdd(self):
+        return get_tdd(self.data, self.index_set)
+
+    def __eq__(self, other):
         if self.index_set == other.index_set:
             return True
         else:
-            return False     
+            return False
 
     def printTensor(self):
         print(self.name, self.qubits, ', depth ', self.depth, ', indices ', str([str(ind) for ind in self.index_set]))
 
-class TensorNetwork:
-    def __init__(self,tensors=dict(),tn_type='tn',qubits_num=0):
-        self.tensors=tensors
-        self.tn_type=tn_type
-        self.qubits_num=qubits_num
+    def __hash__(self):
+        """
+            @romOlivo: From being able to use it with hash tables
+        """
+        def totuple(a):
+            try:
+                return tuple(totuple(i) for i in a)
+            except TypeError:
+                return a
+        return hash((totuple(self.data), totuple(self.index_set)))
 
-    def cont(self,optimizer=None, prnt=False):
-        tdd=get_identity_tdd()
-        i=0
-        for ts in self.tensors: # The most basic case
+
+class TensorNetwork:
+    def __init__(self, tensors=dict(), tn_type='tn', qubits_num=0):
+        self.tensors = tensors
+        self.tn_type = tn_type
+        self.qubits_num = qubits_num
+        """ 
+            @romOlivo: The next variables are to define if the input and output indices are open or close. This
+            will important to generate the correct set of indices in the function 'TNtoCotInput' defined in
+            the file 'TDD_Q.py'.
+        """
+        self.is_input_close = False
+        self.is_output_close = False
+        """
+            @romOlivo: This is for calculate the index set of the TN, as well as how many times each index has appeared.
+            Only filled if the function 'get_index_set' is called
+        """
+        self.index_set = None
+        self.index_2_tensor = dict()
+        self.index_count = None
+
+    def get_index_set(self):
+        """
+            @romOlivo: For listing and counting the indices of the tensor network
+        """
+        if self.index_set is not None:
+            return
+        self.index_set = set()
+        self.index_count = dict()
+        for ts in self.tensors:
+            temp_index = [idx.key for idx in ts.index_set]
+            for idx in temp_index:
+                self.index_set.add(idx)
+                if not idx in self.index_2_tensor:
+                    self.index_2_tensor[idx] = set()
+                    self.index_count[idx] = 0
+                self.index_2_tensor[idx].add(ts)
+                self.index_count[idx] += 1
+
+    def cont(self, optimizer=None, prnt=False):
+        tdd = get_identity_tdd()
+        i = 0
+        for ts in self.tensors:  # The most basic case
             if prnt:
                 print("Contracting the ", i, "-th tensor")
-            temp_tdd=ts.tdd()
-            tdd=cont(tdd,temp_tdd)
+            temp_tdd = ts.tdd()
+            tdd = cont(tdd, temp_tdd)
             i += 1
         return tdd
-    
-    ''' 
+
+    """
         Generate the sequential contraction path
         Added by Qirui Zhang (qiruizh@umich.edu) 
-    '''
+    """
+
     def get_seq_path(self):
-        path = [] 
+        path = []
         tensor_list = self.tensors.copy()
 
         # The very first pair is (0,1)
@@ -66,17 +117,79 @@ class TensorNetwork:
         tensor_list.append(1)
 
         while len(tensor_list) > 1:
-            path.append((0, len(tensor_list)-1))
+            path.append((0, len(tensor_list) - 1))
             tensor_list.pop(0)
             tensor_list.pop()
             tensor_list.append(1)
 
         return tuple(path)
 
-    ''' 
+    def get_pairing_path(self, n=None, d_ini=0, d_fin=0):
+        """
+            romOlivo: Generate the pairing contraction path
+        """
+        path = []
+        if n is None:
+            n = len(self.tensors)
+        is_first_time = True
+        d = d_ini
+        while n != 1:
+            i = n - 1
+            n = (n - n % 2) // 2
+            while i > 0:
+                if i == 2:
+                    path.append((0+d, 1+d))
+                    if is_first_time:
+                        path.append((0+d, n+d+d_fin))
+                    else:
+                        path.append((0+d, n+d))
+                else:
+                    path.append((0+d, 1+d))
+                i -= 2
+            if is_first_time:
+                is_first_time = False
+                d += d_fin
+        # print(path)
+        return tuple(path)
+
+    def get_smart_pairing_path(self, tensors_to_slice=[]):
+        """
+            romOlivo: Generate the smart pairing contraction path
+        """
+        number_of_blocks = 1 + len(tensors_to_slice) * 2
+        current_length = len(self.tensors)
+        total_path = []
+        last_tensor = 0
+        d_f = 0
+        if current_length-1 not in tensors_to_slice:
+            tensors_to_slice.append(current_length)
+        if number_of_blocks > 1:
+            for i in range(len(tensors_to_slice)):
+                n = int(tensors_to_slice[i]) - last_tensor
+                # Edge case
+                if n < 2:
+                    d_f += n
+                    number_of_blocks -= 1
+                    last_tensor = tensors_to_slice[i] + 1
+                    continue
+                d_ini = i + d_f
+                d_fin = current_length - n - d_ini
+                partial_path = self.get_pairing_path(n=n, d_ini=d_ini, d_fin=d_fin)
+                current_length = current_length - n + 1
+                total_path += partial_path
+                last_tensor = tensors_to_slice[i] + 1
+            # Final contractions
+            partial_path = self.get_pairing_path(n=current_length)
+            total_path += partial_path
+        else:
+            total_path = self.get_pairing_path()
+        return tuple(total_path)
+
+    """
         PyTDD Contraction with a given order
         Added by Qirui Zhang (qiruizh@umich.edu) 
-    '''
+    """
+
     def cont_TN(self, path_cot, debug=False):
         path_list = list(path_cot)
         tdd_list = [ts.tdd() for ts in self.tensors]
@@ -86,10 +199,17 @@ class TensorNetwork:
 
             if debug:
                 print("Contracting the ", i, "-th pair ", str(pair))
-            
+
             # Acquire the tensors pointed to by the pair
             tdd_a = tdd_list[pair[0]]
             tdd_b = tdd_list[pair[1]]
+            """
+            try:
+                tdd_a = tdd_list[pair[0]]
+                tdd_b = tdd_list[pair[1]]
+            except:
+                print(pair[0])
+            """
 
             # Perform contraction
             tdd_c = cont(tdd_a, tdd_b)
@@ -102,24 +222,30 @@ class TensorNetwork:
         if len(tdd_list) != 1:
             print("Error: Resulted TDD list length is ", len(tdd_list), " but not one!")
             return False
-        
+
         tdd = tdd_list[0]
         return tdd
 
-    ''' 
+    """
         Contraction using GTN with a given order
-        Added by Qirui Zhang (qiruizh@umich.edu) 
-    '''
-    def cont_GTN(self, path_cot, debug=False): 
+        Added by Qirui Zhang (qiruizh@umich.edu)
+        @romOlivo: Modified so can be measured the time of the actual contraction. It is returned at the end
+    """
+
+    def cont_GTN(self, path_cot, debug=False):
         path_list = list(path_cot)
-        tensor_list = [(gtn.Node(np.squeeze(ts.data).astype(np.complex128), name = ts.name), ts.index_set) for ts in self.tensors]
+        tensor_list = [(gtn.Node(np.squeeze(ts.data).astype(np.complex128), name=ts.name), ts.index_set) for ts in
+                       self.tensors]
+
+        from time import time
+        t_ini = time()
 
         for i in range(len(path_list)):
             pair = path_list[i]
 
             if debug:
                 print("Contracting the ", i, "-th pair ", str(pair))
-            
+
             # Acquire the tensors pointed to by the pair
             ts_a = tensor_list[pair[0]]
             ts_b = tensor_list[pair[1]]
@@ -132,70 +258,84 @@ class TensorNetwork:
             tensor_list.pop(min(pair))
             tensor_list.append(ts_c)
 
+        t_fin = time()
+        t_spent = t_fin - t_ini
+
         if len(tensor_list) != 1:
             print("Error: Resulted TDD list length is ", len(tensor_list), " but not one!")
             return False
-        
+
         ts = tensor_list[0]
-        return ts
-    
+        return ts, t_spent
 
-''' 
+
+"""
     Below are functions added by Qirui Zhang (qiruizh@umich.edu) for FTDD (https://github.com/QiruiZhang/FTDD) 
-'''
+"""
 
-''' This function takes in a Tensor and reduce all the hyper-edges, then return the index set and data array '''
+""" This function takes in a Tensor and reduce all the hyper-edges, then return the index set and data array """
+
+
 def HyperEdgeReduced(ts):
     indices = tuple([ind.key for ind in ts.index_set])
-    if len(ts.data.shape) == 6: # two-qubit gates
+    if len(ts.data.shape) == 6:  # two-qubit gates
         ts_data = ts.data[:, :, :, :, 0, 0]
     else:
         ts_data = ts.data
 
-    if (len(ts_data.shape) == 2) and (indices[0] == indices[1]): # single qubit gates
-        indices_new = (indices[0], )
-        ts_data_new = np.sum(ts_data, axis = 1)
+    if (len(ts_data.shape) == 2) and (indices[0] == indices[1]):  # single qubit gates
+        indices_new = (indices[0],)
+        ts_data_new = np.sum(ts_data, axis=1)
         return indices_new, ts_data_new
-    
-    if (len(ts_data.shape) == 4) and (indices[0] == indices[1]) and (indices[2] == indices[3]): # two qubit gates, both qubits being hyper-edges
+
+    if (len(ts_data.shape) == 4) and (indices[0] == indices[1]) and (
+            indices[2] == indices[3]):  # two qubit gates, both qubits being hyper-edges
         indices_new = (indices[0], indices[2])
-        ts_data_new = np.sum(ts_data, axis = (1,3))
+        ts_data_new = np.sum(ts_data, axis=(1, 3))
         return indices_new, ts_data_new
-    elif (len(ts_data.shape) == 4) and (indices[0] == indices[1]): # two qubit gates, top qubit being hyper-edge
+    elif (len(ts_data.shape) == 4) and (indices[0] == indices[1]):  # two qubit gates, top qubit being hyper-edge
         indices_new = (indices[0], indices[2], indices[3])
-        ts_data_new = np.sum(ts_data, axis = 1)
+        ts_data_new = np.sum(ts_data, axis=1)
         return indices_new, ts_data_new
-    elif (len(ts_data.shape) == 4) and (indices[2] == indices[3]): # two qubit gates, bottom qubit being hyper-edge
+    elif (len(ts_data.shape) == 4) and (indices[2] == indices[3]):  # two qubit gates, bottom qubit being hyper-edge
         indices_new = (indices[0], indices[1], indices[2])
-        ts_data_new = np.sum(ts_data, axis = 3)
+        ts_data_new = np.sum(ts_data, axis=3)
         return indices_new, ts_data_new
 
     indices_new = indices
     ts_data_new = ts_data
     return indices_new, ts_data_new
 
-''' 
+
+"""
     This function simply contracts two tensors as dense arrays
-'''
+"""
+
+
 def contTensor(ts_A, ts_B):
-    ''' Get index list of A and B and take the intersection as indices to be contracted '''
-    ''' Hyper-edges are not handled here, i.e., indices are treated as different if their '.idx' fields are different '''
+    """ Get index list of A and B and take the intersection as indices to be contracted """
+
+    """Hyper-edges are not handled here, i.e., indices are treated as different if their '.idx' fields are different """
+
     var_A = ts_A.index_set
     var_B = ts_B.index_set
-    varCont = [var for var in var_A if var in var_B] # indices to be contracted
+    varCont = [var for var in var_A if var in var_B]  # indices to be contracted
     varOut_A = [var for var in var_A if not var in varCont]
     varOut_B = [var for var in var_B if not var in varCont]
 
-    ''' Positions of indices to be contracted in A and B index lists. To be used as inputs to np.tensordot() '''
-    varContPos_A = tuple([var_A.index(var) for var in varCont]) # position of varCont in tensor A index list
-    varContPos_B = tuple([var_B.index(var) for var in varCont]) # position of varCont in tensor B index list
+    """ Positions of indices to be contracted in A and B index lists. To be used as inputs to np.tensordot() """
 
-    ''' Perform the contraction '''
-    data_C = np.tensordot(np.squeeze(ts_A.data), np.squeeze(ts_B.data), (varContPos_A, varContPos_B) )
-    
-    ''' Create the new tensor C '''
+    varContPos_A = tuple([var_A.index(var) for var in varCont])  # position of varCont in tensor A index list
+    varContPos_B = tuple([var_B.index(var) for var in varCont])  # position of varCont in tensor B index list
+
+    """ Perform the contraction """
+
+    data_C = np.tensordot(np.squeeze(ts_A.data), np.squeeze(ts_B.data), (varContPos_A, varContPos_B))
+
+    """ Create the new tensor C """
+
     ts_C = Tensor(data_C)
-    ts_C.index_set = varOut_A + varOut_B # Append open indices of B to those of A
+    ts_C.index_set = varOut_A + varOut_B  # Append open indices of B to those of A
     ts_C.qubits = list(set(ts_A.qubits + ts_B.qubits))
     ts_C.name = ts_A.name + '-' + ts_B.name
 
@@ -208,40 +348,51 @@ def contTensor(ts_A, ts_B):
 
     return ts_C
 
-''' This function contract two tensors using Google TensorNetwork '''
+
+""" This function contract two tensors using Google TensorNetwork """
+
+
 def contTensorGTN(ts_A, ts_B):
-    ''' Get index list of A and B and take the intersection as indices to be contracted '''
+    """ Get index list of A and B and take the intersection as indices to be contracted """
+
     var_A = ts_A[1]
     var_B = ts_B[1]
-    varCont = [var for var in var_A if var in var_B] # indices to be contracted
+    varCont = [var for var in var_A if var in var_B]  # indices to be contracted
     varOut_A = [var for var in var_A if not var in varCont]
     varOut_B = [var for var in var_B if not var in varCont]
 
-    ''' Positions of indices to be contracted in A and B index lists. To be used as inputs to np.tensordot() '''
-    varContPos_A = tuple([var_A.index(var) for var in varCont]) # position of varCont in tensor A index list
-    varContPos_B = tuple([var_B.index(var) for var in varCont]) # position of varCont in tensor B index list
+    """ Positions of indices to be contracted in A and B index lists. To be used as inputs to np.tensordot() """
 
-    ''' Set-up edges for GTN '''
+    varContPos_A = tuple([var_A.index(var) for var in varCont])  # position of varCont in tensor A index list
+    varContPos_B = tuple([var_B.index(var) for var in varCont])  # position of varCont in tensor B index list
+
+    """ Set-up edges for GTN """
+
     edges = []
     for i in range(len(varCont)):
         edges.append(ts_A[0][varContPos_A[i]] ^ ts_B[0][varContPos_B[i]])
 
-    ''' Perform the contraction '''
+    """ Perform the contraction """
+
     ts_C_node = gtn.contract_between(ts_A[0], ts_B[0], allow_outer_product=True)
 
-    ''' Create the new tensor C '''
-    ts_C_index_set = varOut_A + varOut_B # Append open indices of B to those of A
+    """ Create the new tensor C """
+
+    ts_C_index_set = varOut_A + varOut_B  # Append open indices of B to those of A
     ts_C_node.name = ts_A[0].name + '-' + ts_B[0].name
 
     ts_C = (ts_C_node, ts_C_index_set)
     return ts_C
 
-'''
-    This function takes the array from cTDD.TDD.to_array() and transpose it from the global order to the order of indices given
-    The order of indices out of TDD obeys global order set by Ini_TDD(), however, for the original tensors, they
-    come with user-assigned orders, thus this function is helpful for checking whether a user-provided tensor has been properly
-    converted to TDD and back.
-'''
+
+"""
+    This function takes the array from cTDD.TDD.to_array() and transpose it from the global order to 
+    the order of indices given the order of indices out of TDD obeys global order set by Ini_TDD(). 
+    However, for the original tensors, they come with user-assigned orders, thus this function is helpful 
+    for checking whether a user-provided tensor has been properly converted to TDD and back.
+"""
+
+
 def tdd_to_tensor(arr, index_set):
     arr_ = arr.reshape(tuple([2 for i in range(len(index_set))]))
 
@@ -256,9 +407,13 @@ def tdd_to_tensor(arr, index_set):
     tdd_ToTensor = np.transpose(arr_, perm)
     return tdd_ToTensor
 
-'''
-    This function takes the array from GTN and transpose from the order of indices given to the global order, reverse of above
-'''
+
+"""
+    This function takes the array from GTN and transpose from the order of indices given to the global order, 
+    reverse of above.
+"""
+
+
 def reorder_gts(gts):
     index_set_sort = gts[1].copy()
     index_set_sort.sort()
@@ -268,7 +423,7 @@ def reorder_gts(gts):
         perm.append(gts[1].index(ind))
     perm = tuple(perm)
 
-    res_gts = gtn.Node(np.transpose(gts[0].tensor, perm), name = gts[0].name)
+    res_gts = gtn.Node(np.transpose(gts[0].tensor, perm), name=gts[0].name)
     res_index_set = index_set_sort
 
-    return (res_gts, res_index_set)
+    return res_gts, res_index_set

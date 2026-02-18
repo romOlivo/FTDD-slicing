@@ -5,6 +5,10 @@
  * Modifications by Qirui Zhang (qiruizh@umich.edu) for FTDD (https://github.com/QiruiZhang/FTDD)
  *   - Adapted for TDD
  *   - Changed hash function to FNV
+ *
+ * Modified by Vicente Lopez (voliva@uji.es). Modifications will be marked with @romOlivo.
+ *   - Compute table increase the references of nodes in use.
+ *   - Compute table checks for overwritten results
  */
 
 
@@ -12,6 +16,7 @@
 #define CTDDCOMPUTEDTABLE_HPP
 
 #include "cTDD.hpp"
+#include "cTddUniqueTable.hpp"
 
 
 /*
@@ -45,6 +50,8 @@ public:
     [[nodiscard]] std::size_t   getCount() const        { return NBUCKET; }
     [[nodiscard]] std::size_t   getHit() const          { return hits; }
     [[nodiscard]] std::size_t   getLookups() const      { return lookups; }
+    // @romOlivo: Added for counting collisions
+    [[nodiscard]] std::size_t   getCollisions() const   { return collisions; }
     [[nodiscard]] dataType      hitRatio() const        { return static_cast<dataType>(hits) / static_cast<dataType>(lookups); }
 
 
@@ -81,7 +88,18 @@ public:
     // Insert an entry to the computed cache
     void insert(const Edge& edge1, const Edge& edge2, const Edge& res) {
         std::size_t hashVal = hash(edge1, edge2);
+        // @romOlivo: Added for counting collisions and to be able to remove nodes not used by this table.
+        if (table[hashVal].res.node != nullptr) {
+            collisions++;
+            unique_table.decr_ref_count(table[hashVal].edge1);
+            unique_table.decr_ref_count(table[hashVal].edge2);
+            unique_table.decr_ref_count(table[hashVal].res);
+        }
         table[hashVal]     = {edge1, edge2, res};
+        // @romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
+        unique_table.incr_ref_count(edge1);
+        unique_table.incr_ref_count(edge2);
+        unique_table.incr_ref_count(res);
     }
 
     // Find an entry in the computed cache
@@ -123,6 +141,8 @@ private:
     // lookup statistics
     std::size_t hits    = 0;
     std::size_t lookups = 0;
+    // @romOlivo: Added for counting collisions
+    std::size_t collisions = 0;
 };
 
 
@@ -157,6 +177,8 @@ public:
     [[nodiscard]] std::size_t   getCount() const        { return NBUCKET; }
     [[nodiscard]] std::size_t   getHit() const          { return hits; }
     [[nodiscard]] std::size_t   getLookups() const      { return lookups; }
+    // @romOlivo: Added for counting collisions
+    [[nodiscard]] std::size_t   getCollisions() const   { return collisions; }
     [[nodiscard]] dataType      hitRatio() const        { return static_cast<dataType>(hits) / static_cast<dataType>(lookups); }
 
 
@@ -191,7 +213,23 @@ public:
     // Insert an entry to the computed cache
     void insert(Node* node1, Node* node2, const std::vector<keyType>& key_2_new_key_1, const std::vector<keyType>& key_2_new_key_2, const Edge& res) {
         std::size_t hashVal = hash(node1, node2, key_2_new_key_1, key_2_new_key_2);
+        Edge temp;
+        // @romOlivo: Added for counting collisions and to be able to remove nodes not used by this table.
+        if (table[hashVal].res.node != nullptr) {
+            collisions++;
+            temp.node = table[hashVal].node1;
+            unique_table.decr_ref_count(temp);
+            temp.node = table[hashVal].node2;
+            unique_table.decr_ref_count(temp);
+            unique_table.decr_ref_count(table[hashVal].res);
+        }
         table[hashVal]     = {node1, node2, key_2_new_key_1, key_2_new_key_2, res};
+        // @romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
+        temp.node = table[hashVal].node1;
+        unique_table.incr_ref_count(temp);
+        temp.node = table[hashVal].node2;
+        unique_table.incr_ref_count(temp);
+        unique_table.incr_ref_count(res);
     }
 
     // Find an entry in the computed cache
@@ -235,6 +273,8 @@ private:
     // lookup statistics
     std::size_t hits    = 0;
     std::size_t lookups = 0;
+    // @romOlivo: Added for counting collisions
+    std::size_t collisions = 0;
 };
 
 
