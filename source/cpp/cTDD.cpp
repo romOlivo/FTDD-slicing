@@ -748,16 +748,21 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
     Edge edge1 = edge1_in; edge1.weight = 1;
     Edge edge2 = edge2_in; edge2.weight = 1;
 
-    // key_2_new_key for the curent level of recursion
-    std::vector<keyType> temp_key_2_new_key_0(key_2_new_key_0.begin(), key_2_new_key_0.begin() + k1 + 1);
-    std::vector<keyType> temp_key_2_new_key_1(key_2_new_key_1.begin(), key_2_new_key_1.begin() + k2 + 1);
+    std::vector<keyType> temp_key_2_new_key_0;
+    std::vector<keyType> temp_key_2_new_key_1;
 
-    // Query contraction computed table
-    Edge find_cont = cont_computed_table.find(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1);
-    if (find_cont.node != nullptr) {
-        res = find_cont;
-        res.weight *= w1 * w2;
-        return res;
+    if (k1 + k2 > 3) {
+        // key_2_new_key for the curent level of recursion
+        temp_key_2_new_key_0.assign(key_2_new_key_0.begin(), key_2_new_key_0.begin() + k1 + 1);
+        temp_key_2_new_key_1.assign(key_2_new_key_1.begin(), key_2_new_key_1.begin() + k2 + 1);
+
+        // Query contraction computed table
+        Edge find_cont = cont_computed_table.find(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1);
+        if (find_cont.node != nullptr) {
+            res = find_cont;
+            res.weight *= w1 * w2;
+            return res;
+        }
     }
 
     // Recursive contraction
@@ -769,12 +774,14 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
                 the_successors[k] = contract(Slicing(edge1, k1, k), edge2, key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num);
             }
             res = normalize(the_key, the_successors);
-            cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
+            if (k1 + k2 > 3)
+                cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
             res.weight *= w1 * w2;
         } else { // if x in var
             res = add(contract(Slicing(edge1, k1, 0), edge2, key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1), 
                       contract(Slicing(edge1, k1, 1), edge2, key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1));
-            cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
+            if (k1 + k2 > 3)
+                cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
             res.weight *= w1 * w2;
         }
     } else if (cont_order_0[k1+1] == cont_order_1[k2+1]) { // Two tdds get to the same index
@@ -784,7 +791,8 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
                 the_successors[k] = contract(Slicing(edge1, k1, k), Slicing(edge2, k2, k), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num);
             }
             res = normalize(the_key, the_successors);
-            cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
+            if (k1 + k2 > 3)
+                cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
             res.weight *= w1 * w2;
         } else { // if x in var
             res = add(contract(Slicing(edge1, k1, 0), Slicing(edge2, k2, 0), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1), 
@@ -799,12 +807,14 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
                 the_successors[k] = contract(edge1, Slicing(edge2, k2, k), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num);
             }
             res = normalize(the_key, the_successors);
-            cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
+            if (k1 + k2 > 3)
+                cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
             res.weight *= w1 * w2;
         } else { // if x in var
             res = add(contract(edge1, Slicing(edge2, k2, 0), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1), 
                       contract(edge1, Slicing(edge2, k2, 1), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1));
-            cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
+            if (k1 + k2 > 3)
+                cont_computed_table.insert(edge1.node, edge2.node, temp_key_2_new_key_0, temp_key_2_new_key_1, res);
             res.weight *= w1 * w2;
         }
     }
