@@ -223,7 +223,12 @@ public:
             unique_table.decr_ref_count(temp);
             unique_table.decr_ref_count(table[hashVal].res);
         }
-        table[hashVal]     = {node1, node2, key_2_new_key_1, key_2_new_key_2, res};
+        // @romOlivo: Changed to make efficient copies
+        table[hashVal].node1 = node1;
+        table[hashVal].node2 = node2;
+        table[hashVal].key_2_new_key_1 = key_2_new_key_1;
+        table[hashVal].key_2_new_key_2 = key_2_new_key_2;
+        table[hashVal].res = res;
         // @romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
         temp.node = table[hashVal].node1;
         unique_table.incr_ref_count(temp);
@@ -263,6 +268,14 @@ private:
         std::vector<keyType> key_2_new_key_1;
         std::vector<keyType> key_2_new_key_2;
         Edge    res;
+
+        // @romOlivo: Making a constructor so now the memory is reserved
+        Entry() {
+            node1 = nullptr;
+            node2 = nullptr;
+            key_2_new_key_1.reserve(100);
+            key_2_new_key_2.reserve(100);
+        }
     };
 
     // computed cache
