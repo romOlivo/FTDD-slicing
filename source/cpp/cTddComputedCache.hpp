@@ -186,7 +186,9 @@ public:
         Hash functions
     */
     // FNV-1a
-    std::size_t hash(Node* node1, Node* node2, const std::vector<keyType>& key_2_new_key_1, const std::vector<keyType>& key_2_new_key_2) {
+    std::size_t hash(Node* node1, Node* node2,
+                                     const std::vector<keyType>& v0, std::size_t len0,
+                                     const std::vector<keyType>& v1, std::size_t len1) {
         hashType hash = fnv_offset_basis;
 
         // hash the node shared pointers
@@ -198,10 +200,16 @@ public:
         for (std::size_t i = 0; i < sizeof(std::uintptr_t); i++) { hash = ( hash ^ static_cast<hashType>(bytes[i]) ) * fnv_prime; }
 
         // hash key_2_new_key_1
-        for (const auto& val : key_2_new_key_1) { hash = ( hash ^ static_cast<hashType>(val) ) * fnv_prime; }
+        // for (const auto& val : key_2_new_key_1) { hash = ( hash ^ static_cast<hashType>(val) ) * fnv_prime; }
+        for (std::size_t i = 0; i < len0; ++i) {
+            hash = ( hash ^ static_cast<hashType>(v0[i]) ) * fnv_prime;
+        }
 
         // hash_key_2_new_key_2
-        for (const auto& val : key_2_new_key_2) { hash = ( hash ^ static_cast<hashType>(val) ) * fnv_prime; }
+        // for (const auto& val : key_2_new_key_2) { hash = ( hash ^ static_cast<hashType>(val) ) * fnv_prime; }
+        for (std::size_t i = 0; i < len1; ++i) {
+            hash = ( hash ^ static_cast<hashType>(v1[i]) ) * fnv_prime;
+        }
 
         return static_cast<std::size_t>(hash & MASK);
     }
@@ -211,54 +219,68 @@ public:
         Functions for the computed cache look up
     */
     // Insert an entry to the computed cache
-    void insert(Node* node1, Node* node2, const std::vector<keyType>& key_2_new_key_1, const std::vector<keyType>& key_2_new_key_2, const Edge& res) {
-        std::size_t hashVal = hash(node1, node2, key_2_new_key_1, key_2_new_key_2);
-        Edge temp;
-        // @romOlivo: Added for counting collisions and to be able to remove nodes not used by this table.
-        if (table[hashVal].res.node != nullptr) {
-            collisions++;
-            temp.node = table[hashVal].node1;
-            unique_table.decr_ref_count(temp);
-            temp.node = table[hashVal].node2;
-            unique_table.decr_ref_count(temp);
-            unique_table.decr_ref_count(table[hashVal].res);
-        }
-        // @romOlivo: Changed to make efficient copies
-        table[hashVal].node1 = node1;
-        table[hashVal].node2 = node2;
-        table[hashVal].key_2_new_key_1 = key_2_new_key_1;
-        table[hashVal].key_2_new_key_2 = key_2_new_key_2;
-        table[hashVal].res = res;
-        // @romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
-        temp.node = table[hashVal].node1;
-        unique_table.incr_ref_count(temp);
-        temp.node = table[hashVal].node2;
-        unique_table.incr_ref_count(temp);
-        unique_table.incr_ref_count(res);
+    void insert(Node* node1, Node* node2,
+            const std::vector<keyType>& v1, std::size_t len1,
+            const std::vector<keyType>& v2, std::size_t len2,
+            const Edge& res) {
+
+    std::size_t hashVal = hash(node1, node2, v1, len1, v2, len2);
+
+    // @romOlivo: Added for counting collisions and to be able to remove nodes not used by this table.
+    if (table[hashVal].res.node != nullptr) {
+        collisions++;
+        unique_table.decr_ref_count(Edge(table[hashVal].node1));
+        unique_table.decr_ref_count(Edge(table[hashVal].node2));
+        unique_table.decr_ref_count(table[hashVal].res);
     }
 
-    // Find an entry in the computed cache
-    Edge find(Node* node1, Node* node2, const std::vector<keyType>& key_2_new_key_1, const std::vector<keyType>& key_2_new_key_2) {
-        lookups++;
-        
-        // Find edge1 op edge2
-        std::size_t hashVal = hash(node1, node2, key_2_new_key_1, key_2_new_key_2);
-        Entry      entry = table[hashVal];
-        if ((entry.res.node != nullptr) && (entry.node1 == node1) && (entry.node2 == node2) && (entry.key_2_new_key_1 == key_2_new_key_1) && (entry.key_2_new_key_2 == key_2_new_key_2)) { // found 
-            hits++;
-            return entry.res;
-        }
+    // @romOlivo: Changed for an direct copy of the vector
+    table[hashVal].node1 = node1;
+    table[hashVal].node2 = node2;
+    std::memcpy(table[hashVal].key_2_new_key_1.data(), v1.data(), len1 * sizeof(keyType));
+    std::memcpy(table[hashVal].key_2_new_key_2.data(), v2.data(), len2 * sizeof(keyType));
+    table[hashVal].t1 = len1;
+    table[hashVal].t2 = len2;
+    table[hashVal].res = res;
 
-        // Find edge2 op edge1
-        hashVal = hash(node2, node1, key_2_new_key_2, key_2_new_key_1);
-        entry = table[hashVal];
-        if ((entry.res.node != nullptr) && (entry.node2 == node1) && (entry.node1 == node2) && (entry.key_2_new_key_2 == key_2_new_key_1) && (entry.key_2_new_key_1 == key_2_new_key_2)) { // found 
-            hits++;
-            return entry.res;
-        }
+    // @romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
+    unique_table.incr_ref_count(Edge(node1));
+    unique_table.incr_ref_count(Edge(node2));
+    unique_table.incr_ref_count(res);
+}
+Edge find(Node* node1, Node* node2,
+          const std::vector<keyType>& v1, std::size_t len1,
+          const std::vector<keyType>& v2, std::size_t len2) {
+    lookups++;
 
-        return Edge();
+    // Find edge1 op edge2
+    std::size_t hashVal = hash(node1, node2, v1, len1, v2, len2);
+    Entry& entry = table[hashVal];
+
+    if (entry.res.node != nullptr && entry.node1 == node1 && entry.node2 == node2 && len1 == entry.t1 && len2 == entry.t2) {
+            if (std::equal(entry.key_2_new_key_1.begin(), entry.key_2_new_key_1.end(), v1.begin()) &&
+                std::equal(entry.key_2_new_key_2.begin(), entry.key_2_new_key_2.end(), v2.begin())) {
+                hits++;
+                return entry.res;
+            }
     }
+
+    // Find edge2 op edge1
+    hashVal = hash(node2, node1, v2, len2, v1, len1);
+    Entry& entry_comm = table[hashVal];
+
+    if (entry_comm.res.node != nullptr && entry_comm.node1 == node2 && entry_comm.node2 == node1) {
+        if (len1 == entry.t2 && len2 == entry.t1) {
+            if (std::equal(entry_comm.key_2_new_key_1.begin(), entry_comm.key_2_new_key_1.end(), v2.begin()) &&
+                std::equal(entry_comm.key_2_new_key_2.begin(), entry_comm.key_2_new_key_2.end(), v1.begin())) {
+                hits++;
+                return entry_comm.res;
+            }
+        }
+    }
+
+    return Edge();
+}
 
 private:
     // Cache entry
@@ -266,7 +288,9 @@ private:
         Node*   node1;
         Node*   node2;
         std::vector<keyType> key_2_new_key_1;
+        std::size_t t1;
         std::vector<keyType> key_2_new_key_2;
+        std::size_t t2;
         Edge    res;
 
         // @romOlivo: Making a constructor so now the memory is reserved
