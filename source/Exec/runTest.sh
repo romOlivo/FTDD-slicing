@@ -24,8 +24,7 @@ circuit_qubits["real_amplitude"]="15 20 25 30"
 circuit_qubits["amplitude_estimation"]="5 10 15 20"
 
 methods=('seq')
-# circuit=("qpe" "qft_indep" "qnn" "qwalk" "rqc" "ghz" "graph_state" "real_amplitude" "amplitude_estimation")
-circuit=("amplitude_estimation")
+circuit=("qpe" "qft_indep" "qnn" "qwalk" "rqc" "ghz" "graph_state" "real_amplitude" "amplitude_estimation")
 tools=('FTDD')
 index_order=('default' 'rcm' 'path')
 
