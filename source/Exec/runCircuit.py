@@ -1,6 +1,6 @@
 from qiskit import QuantumCircuit
 
-from source.TDD_Q import simulate
+from source.Simulate import simulate
 
 if __name__ == "__main__":
     import sys
