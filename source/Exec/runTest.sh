@@ -24,8 +24,10 @@ circuit_qubits["real_amplitude"]="15 20 25 30"
 circuit_qubits["amplitude_estimation"]="5 10 15 20"
 
 methods=('seq')
-circuit=("qpe" "qft_indep" "qnn" "qwalk" "rqc" "ghz" "graph_state" "real_amplitude" "amplitude_estimation")
+# circuit=("qpe" "qft_indep" "qnn" "qwalk" "rqc" "ghz" "graph_state" "real_amplitude" "amplitude_estimation")
+circuit=("amplitude_estimation")
 tools=('FTDD')
+index_order=('default' 'rcm' 'path')
 
 echo "Starting simulations..."
 for method in "${methods[@]}"; do
@@ -51,7 +53,9 @@ for method in "${methods[@]}"; do
       for q in "${n_qubits[@]}"; do
         c_full_name=${circuit_name[$curr_circuit]}
         echo " #--#>> Simulating $curr_circuit ($q qubits)..."
-        timeout 7200 python3 source/Exec/runCircuit.py "$q" "$method" "$curr_circuit" "$c_full_name" "$tool"
+        for order in "${index_order[@]}"; do
+          timeout 7200 python3 source/Exec/runCircuit.py "$q" "$method" "$curr_circuit" "$c_full_name" "$tool" "$order"
+        done
       done
     done
   done
