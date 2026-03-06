@@ -48,9 +48,9 @@ def PyTN_2_cTN(tn_lbl):
 '''
 path = './Benchmarks/Verification/'
 # file_name = sys.argv[1]
-# file_name = "qnn_indep_qiskit_13"
+file_name = "qnn_indep_qiskit_13"
 # file_name = "qftentangled_indep_qiskit_15"
-file_name = "qwalk_d1_7"
+# file_name = "qwalk_d1_7"
 cir = QuantumCircuit.from_qasm_file(path + file_name + '.qasm')
 cir.draw('mpl').savefig("./CircuitDiagrams/" + file_name + ".png")
 
