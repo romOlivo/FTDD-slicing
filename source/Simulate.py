@@ -2,6 +2,7 @@ from source.TDD_Q import squeezeTN, squeezeTN_ultra, TNtoCotInput, generate_clos
     get_real_qubit_num, add_inputs, add_outputs
 from source.utils import FileOutputHandler, PrintOutputHandler, HybridOutputHandler
 from source.TN import Index, Tensor, TensorNetwork, contTensor
+from source.IndexOrder import calculate_order, INDEX_ORDER_DEFAULT
 import numpy as np
 
 global handler
@@ -448,20 +449,22 @@ def contract_with_FTDD(path, tns, indices, n):
 
 
 def simulate(cir, is_input_closed=True, is_output_closed=True, use_tetris=False, use_slicing=False,
-             contraction_method='seq', n_indices=1, slicing_method="max", backend="PyTDD", handler_name="file"):
+             contraction_method='seq', n_indices=1, slicing_method="max", backend="PyTDD", handler_name="file",
+             index_order_method=INDEX_ORDER_DEFAULT):
     """
         romOlivo: This method was added to simplify the simulation process. It will encapsulate all the process
         after the circuit is read as a QuantumCircuit until you get the result of all the contraction.
         Input variables:
-        cir ----------------> Circuit in the form of 'QuantumCircuit' class of qiskit
-        is_input_closed ----> True if you want to close the input
-        is_output_closed ---> True if you want to close the output
-        use_tetris ---------> True if you want to apply Tetris
-        use_slicing --------> True if you want to apply slicing. NOT IMPLEMENTED YET
-        contraction_method -> Name of the contraction method. Can be 'seq', 'cot', 'k-ops', 'pair' or 'spair'
-        n_indices ----------> Number of indices to slice
-        slicing_method -----> Slicing method tu use. Can be 'max' or 'cot'
-        handler_name -------> Output handler to use. Can be 'print' or 'file'
+        cir -----------------> Circuit in the form of 'QuantumCircuit' class of qiskit
+        is_input_closed -----> True if you want to close the input
+        is_output_closed ----> True if you want to close the output
+        use_tetris ----------> True if you want to apply Tetris
+        use_slicing ---------> True if you want to apply slicing. NOT IMPLEMENTED YET
+        contraction_method --> Name of the contraction method. Can be 'seq', 'cot', 'k-ops', 'pair' or 'spair'
+        n_indices -----------> Number of indices to slice
+        slicing_method ------> Slicing method tu use. Can be 'max' or 'cot'
+        handler_name --------> Output handler to use. Can be 'print' or 'file'
+        index_order_method --> Name of the global index order using. Can be 'default', 'rcm' or 'max'.
         Returning:
         tdd ----------------> TDD that contains the result of contracting the tensor network
     """
@@ -469,11 +472,11 @@ def simulate(cir, is_input_closed=True, is_output_closed=True, use_tetris=False,
     # Init the handler
     global handler
     if handler_name == "print":
-        handler = PrintOutputHandler(backend, circuit=cir, cont_method=contraction_method)
+        handler = PrintOutputHandler(backend, circuit=cir, cont_method=contraction_method, index_order=index_order_method)
     elif handler_name == "file":
-        handler = FileOutputHandler(backend, circuit=cir, cont_method=contraction_method)
+        handler = FileOutputHandler(backend, circuit=cir, cont_method=contraction_method, index_order=index_order_method)
     elif handler_name == "hybrid":
-        handler = HybridOutputHandler(backend, circuit=cir, cont_method=contraction_method)
+        handler = HybridOutputHandler(backend, circuit=cir, cont_method=contraction_method, index_order=index_order_method)
 
     # Read and prepare the circuit
     tn, all_indices_lbl, depth = cir_2_tn_lbl(cir)
@@ -506,13 +509,16 @@ def simulate(cir, is_input_closed=True, is_output_closed=True, use_tetris=False,
     # Calculate the path
     path = calculate_path(tns[0], contraction_method, tensors_to_slice=tensors_to_slice)
 
+    # Calculate the index order
+    index_order = calculate_order(index_order_method, tns[0].generate_tn().tensors, path, default=all_indices_lbl)
+
     tdd = None
     if backend == "PyTDD":
-        tdd = contract_with_PyTDD(path, tns, all_indices_lbl)
+        tdd = contract_with_PyTDD(path, tns, index_order)
     elif backend == "GTN":
         tdd = contract_with_GTN(path, tns)
     elif backend == "FTDD":
-        tdd = contract_with_FTDD(path, tns, all_indices_lbl, n)
+        tdd = contract_with_FTDD(path, tns, index_order, n)
     handler.end_printing()
     return tdd
 
