@@ -16,6 +16,7 @@
 #define CTDDCOMPUTEDTABLE_HPP
 
 #include "cTDD.hpp"
+#include "memoryPool.hpp"
 #include "cTddUniqueTable.hpp"
 
 
@@ -33,14 +34,17 @@ public:
     AddComputedCache(std::size_t Nbucket) {
         NBUCKET = Nbucket;
         MASK = NBUCKET - 1;
-        table.resize(NBUCKET);
+        table.resize(NBUCKET, nullptr);
     }
 
     // clear everything
     void clear() {
+    /*
         for (auto& entry: table) {
-            entry.res.node = nullptr;
+            pool.release(entry);
         }
+    */
+        table.clear();
     }
 
 
@@ -89,13 +93,19 @@ public:
     void insert(const Edge& edge1, const Edge& edge2, const Edge& res) {
         std::size_t hashVal = hash(edge1, edge2);
         // @romOlivo: Added for counting collisions and to be able to remove nodes not used by this table.
-        if (table[hashVal].res.node != nullptr) {
+        Entry* entry = table[hashVal];
+        if (entry == nullptr) {
+            entry = pool.get();
+            table[hashVal]  = entry;
+        } else {
             collisions++;
-            unique_table.decr_ref_count(table[hashVal].edge1);
-            unique_table.decr_ref_count(table[hashVal].edge2);
-            unique_table.decr_ref_count(table[hashVal].res);
+            unique_table.decr_ref_count(entry->edge1);
+            unique_table.decr_ref_count(entry->edge2);
+            unique_table.decr_ref_count(entry->res);
         }
-        table[hashVal]     = {edge1, edge2, res};
+        entry->edge1 = edge1;
+        entry->edge2 = edge2;
+        entry->res = res;
         // @romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
         unique_table.incr_ref_count(edge1);
         unique_table.incr_ref_count(edge2);
@@ -108,18 +118,18 @@ public:
         
         // Find edge1 op edge2
         std::size_t hashVal = hash(edge1, edge2);
-        Entry      entry = table[hashVal];
-        if ((entry.res.node != nullptr) && (entry.edge1 == edge1) && (entry.edge2 == edge2)) { // found 
+        Entry*      entry = table[hashVal];
+        if ((entry != nullptr) && (entry->edge1 == edge1) && (entry->edge2 == edge2)) { // found
             hits++;
-            return entry.res;
+            return entry->res;
         }
 
         // Find edge2 op edge1
         hashVal = hash(edge2, edge1);
         entry = table[hashVal];
-        if ((entry.res.node != nullptr) && (entry.edge1 == edge2) && (entry.edge2 == edge1)) { // found 
+        if ((entry != nullptr) && (entry->edge1 == edge2) && (entry->edge2 == edge1)) { // found
             hits++;
-            return entry.res;
+            return entry->res;
         }
 
         return Edge();
@@ -135,7 +145,8 @@ private:
 
     // computed cache
     std::size_t NBUCKET;
-    std::vector<Entry> table{std::vector<Entry>(0)};
+    std::vector<Entry*> table{std::vector<Entry*>(0)};
+    MemoryPool<Entry> pool;
     std::size_t MASK;
 
     // lookup statistics
@@ -160,14 +171,16 @@ public:
     ContComputedCache(std::size_t Nbucket) {
         NBUCKET = Nbucket;
         MASK = NBUCKET - 1;
-        table.resize(NBUCKET);
+        table.resize(NBUCKET, nullptr);
     }
 
     // clear everything
     void clear() {
+    /*
         for (auto& entry: table) {
             entry.res.node = nullptr;
         }
+    */
     }
 
 
@@ -225,23 +238,27 @@ public:
             const Edge& res) {
 
     std::size_t hashVal = hash(node1, node2, v1, len1, v2, len2);
+    Entry* entry = table[hashVal];
 
     // @romOlivo: Added for counting collisions and to be able to remove nodes not used by this table.
-    if (table[hashVal].res.node != nullptr) {
+    if (entry != nullptr) {
         collisions++;
-        unique_table.decr_ref_count(Edge(table[hashVal].node1));
-        unique_table.decr_ref_count(Edge(table[hashVal].node2));
-        unique_table.decr_ref_count(table[hashVal].res);
+        unique_table.decr_ref_count(Edge(entry->node1));
+        unique_table.decr_ref_count(Edge(entry->node2));
+        unique_table.decr_ref_count(entry->res);
+    } else {
+        entry = pool.get();
+        table[hashVal] = entry;
     }
 
     // @romOlivo: Changed for an direct copy of the vector
-    table[hashVal].node1 = node1;
-    table[hashVal].node2 = node2;
-    std::memcpy(table[hashVal].key_2_new_key_1.data(), v1.data(), len1 * sizeof(keyType));
-    std::memcpy(table[hashVal].key_2_new_key_2.data(), v2.data(), len2 * sizeof(keyType));
-    table[hashVal].t1 = len1;
-    table[hashVal].t2 = len2;
-    table[hashVal].res = res;
+    entry->node1 = node1;
+    entry->node2 = node2;
+    std::memcpy(entry->key_2_new_key_1.data(), v1.data(), len1 * sizeof(keyType));
+    std::memcpy(entry->key_2_new_key_2.data(), v2.data(), len2 * sizeof(keyType));
+    entry->t1 = len1;
+    entry->t2 = len2;
+    entry->res = res;
 
     // @romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
     unique_table.incr_ref_count(Edge(node1));
@@ -255,26 +272,26 @@ Edge find(Node* node1, Node* node2,
 
     // Find edge1 op edge2
     std::size_t hashVal = hash(node1, node2, v1, len1, v2, len2);
-    Entry& entry = table[hashVal];
+    Entry* entry = table[hashVal];
 
-    if (entry.res.node != nullptr && entry.node1 == node1 && entry.node2 == node2 && len1 == entry.t1 && len2 == entry.t2) {
-            if (std::equal(entry.key_2_new_key_1.begin(), entry.key_2_new_key_1.end(), v1.begin()) &&
-                std::equal(entry.key_2_new_key_2.begin(), entry.key_2_new_key_2.end(), v2.begin())) {
+    if (entry != nullptr && entry->node1 == node1 && entry->node2 == node2 && len1 == entry->t1 && len2 == entry->t2) {
+            if (std::equal(entry->key_2_new_key_1.begin(), entry->key_2_new_key_1.end(), v1.begin()) &&
+                std::equal(entry->key_2_new_key_2.begin(), entry->key_2_new_key_2.end(), v2.begin())) {
                 hits++;
-                return entry.res;
+                return entry->res;
             }
     }
 
     // Find edge2 op edge1
     hashVal = hash(node2, node1, v2, len2, v1, len1);
-    Entry& entry_comm = table[hashVal];
+    Entry* entry_comm = table[hashVal];
 
-    if (entry_comm.res.node != nullptr && entry_comm.node1 == node2 && entry_comm.node2 == node1) {
-        if (len1 == entry.t2 && len2 == entry.t1) {
-            if (std::equal(entry_comm.key_2_new_key_1.begin(), entry_comm.key_2_new_key_1.end(), v2.begin()) &&
-                std::equal(entry_comm.key_2_new_key_2.begin(), entry_comm.key_2_new_key_2.end(), v1.begin())) {
+    if (entry_comm != nullptr && entry_comm->node1 == node2 && entry_comm->node2 == node1) {
+        if (len1 == entry_comm->t2 && len2 == entry_comm->t1) {
+            if (std::equal(entry_comm->key_2_new_key_1.begin(), entry_comm->key_2_new_key_1.end(), v2.begin()) &&
+                std::equal(entry_comm->key_2_new_key_2.begin(), entry_comm->key_2_new_key_2.end(), v1.begin())) {
                 hits++;
-                return entry_comm.res;
+                return entry_comm->res;
             }
         }
     }
@@ -304,7 +321,8 @@ private:
 
     // computed cache
     std::size_t NBUCKET;
-    std::vector<Entry> table{std::vector<Entry>(0)};
+    std::vector<Entry*> table{std::vector<Entry*>(0)};
+    MemoryPool<Entry> pool;
     std::size_t MASK;
 
     // lookup statistics
