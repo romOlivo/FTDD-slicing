@@ -246,7 +246,7 @@ TDD TensorNetwork::cont_TN(py::tuple path, bool debug) {
     // Convert all tensors to TDDs beforehand
     for (uint i = 0; i < tensors.size(); i++) {
         tdd_list[i] = tensors[i].tdd();
-        unique_table.incr_ref_count(tdd_list[i].root);
+        unique_table.incr_ref_count(tdd_list[i].root.node);
     }
 
     // Contraction
@@ -262,9 +262,9 @@ TDD TensorNetwork::cont_TN(py::tuple path, bool debug) {
         TDD tdd_c = cont(tdd_a, tdd_b);
 
         // Update reference count
-        unique_table.decr_ref_count(tdd_a.root);
-        unique_table.decr_ref_count(tdd_b.root);
-        unique_table.incr_ref_count(tdd_c.root);
+        unique_table.decr_ref_count(tdd_a.root.node);
+        unique_table.decr_ref_count(tdd_b.root.node);
+        unique_table.incr_ref_count(tdd_c.root.node);
 
         // Update tensor list
         tdd_list.erase(tdd_list.begin() + std::max(pair.first, pair.second));

@@ -235,31 +235,31 @@ public:
         Functions for garbage collection
     */
     // increment reference counter for node e points to and recursively increment reference counter for each child if this is the first reference
-    void incr_ref_count(const Edge& edge) {
+    void incr_ref_count(Node* node) {
         // Check if node is terminal or if ref count already hits max: not proceed in these cases
-        if ((edge.node == node_n1) || (edge.node->refCnt == std::numeric_limits<refCntType>::max())) { return; }
+        if ((node == node_n1) || (node->refCnt == std::numeric_limits<refCntType>::max())) { return; }
 
         // Increment reference count
-        edge.node->refCnt += 1;
+        node->refCnt += 1;
 
         // Increment the reference count of children if it is the first reference for this node 
-        if (edge.node->refCnt == 1) {
-            for (const auto& edge: edge.node->edges) { incr_ref_count(edge); }
+        if (node->refCnt == 1) {
+            for (const auto& edge: node->edges) { incr_ref_count(edge.node); }
             activeNodeCount++;
         }
     }
 
     // decrement reference counter for node e points to and recursively decrement reference counter for each child if this is the last reference
-    void decr_ref_count(const Edge& edge) {
+    void decr_ref_count(Node* node) {
         // Check if node is terminal or if ref count already hits max: not proceed in these cases
-        if ((edge.node == node_n1) || (edge.node->refCnt == std::numeric_limits<refCntType>::max())) { return; }
+        if ((node == node_n1) || (node->refCnt == std::numeric_limits<refCntType>::max())) { return; }
 
         // Decrement reference count
-        edge.node->refCnt -= 1;
+        node->refCnt -= 1;
 
         // Decrement the reference count of children if it is the last reference for this node 
-        if (edge.node->refCnt == 0) {
-            for (const auto& edge: edge.node->edges) { decr_ref_count(edge); }
+        if (node->refCnt == 0) {
+            for (const auto& edge: node->edges) { decr_ref_count(edge.node); }
             activeNodeCount--;
         }
     }

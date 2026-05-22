@@ -99,17 +99,17 @@ public:
             table[hashVal]  = entry;
         } else {
             collisions++;
-            unique_table.decr_ref_count(entry->edge1);
-            unique_table.decr_ref_count(entry->edge2);
-            unique_table.decr_ref_count(entry->res);
+            unique_table.decr_ref_count(entry->edge1.node);
+            unique_table.decr_ref_count(entry->edge2.node);
+            unique_table.decr_ref_count(entry->res.node);
         }
         entry->edge1 = edge1;
         entry->edge2 = edge2;
         entry->res = res;
         // @romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
-        unique_table.incr_ref_count(edge1);
-        unique_table.incr_ref_count(edge2);
-        unique_table.incr_ref_count(res);
+        unique_table.incr_ref_count(edge1.node);
+        unique_table.incr_ref_count(edge2.node);
+        unique_table.incr_ref_count(res.node);
     }
 
     // Find an entry in the computed cache
@@ -243,9 +243,9 @@ public:
     // @romOlivo: Added for counting collisions and to be able to remove nodes not used by this table.
     if (entry != nullptr) {
         collisions++;
-        unique_table.decr_ref_count(Edge(entry->node1));
-        unique_table.decr_ref_count(Edge(entry->node2));
-        unique_table.decr_ref_count(entry->res);
+        unique_table.decr_ref_count(entry->node1);
+        unique_table.decr_ref_count(entry->node2);
+        unique_table.decr_ref_count(entry->res.node);
     } else {
         entry = pool.get();
         table[hashVal] = entry;
@@ -261,9 +261,9 @@ public:
     entry->res = res;
 
     // @romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
-    unique_table.incr_ref_count(Edge(node1));
-    unique_table.incr_ref_count(Edge(node2));
-    unique_table.incr_ref_count(res);
+    unique_table.incr_ref_count(node1);
+    unique_table.incr_ref_count(node2);
+    unique_table.incr_ref_count(res.node);
 }
 Edge find(Node* node1, Node* node2,
           const std::vector<keyType>& v1, std::size_t len1,
