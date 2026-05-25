@@ -206,8 +206,9 @@ complexArrayType TDD::to_array() {
 
 std::complex<dataType> TDD::get_amplitude(py::list index_values) {
     std::vector<int> index_values_;
+    int ind;
     for (uint k = 0; k < index_values.size(); k++) {
-        int ind = index_values[k].cast<int>();
+        ind = index_values[k].cast<int>();
         index_values_.push_back(ind);
     }
 
@@ -516,8 +517,7 @@ Edge np_2_tdd(TensorArray* U, const std::vector<uint>& slice, const std::vector<
     }
 
     // Normalization
-    Edge edge = normalize(x, the_successors);
-    return edge;
+    return normalize(x, the_successors);
 }
 
 

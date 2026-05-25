@@ -265,7 +265,7 @@ public:
     }
 
     // return collected node to the available list
-    void returnNode(Node* p) {
+    inline void returnNode(Node* p) {
         p->next   = available;
         available = p;
     }
@@ -278,12 +278,15 @@ public:
         // Start garbage collection for unique table
         gcRuns++;
         std::size_t collected = 0; std::size_t remaining = 0;
+        Node* pNode;
+        Node* prev;
+        Node* next;
         for (auto& bucket: tables) { // a bucket in the table
-            Node* pNode = bucket;
-            Node* prev = nullptr;
+            pNode = bucket;
+            prev = nullptr;
             while (pNode != nullptr) {
                 if (pNode->refCnt == 0) { // Collect this node
-                    Node* next = pNode->next;
+                    next = pNode->next;
                     if (prev == nullptr) { // head of list
                         bucket = next;
                     } else { // in the middle
