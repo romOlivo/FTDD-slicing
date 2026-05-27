@@ -254,7 +254,14 @@ public:
     // @romOlivo: Changed for an direct copy of the vector
     entry->node1 = node1;
     entry->node2 = node2;
+    if (entry->key_2_new_key_1.size() < len1) {
+        entry->key_2_new_key_1.resize(len1);
+    }
     std::memcpy(entry->key_2_new_key_1.data(), v1.data(), len1 * sizeof(keyType));
+
+    if (entry->key_2_new_key_2.size() < len2) {
+        entry->key_2_new_key_2.resize(len2);
+    }
     std::memcpy(entry->key_2_new_key_2.data(), v2.data(), len2 * sizeof(keyType));
     entry->t1 = len1;
     entry->t2 = len2;
