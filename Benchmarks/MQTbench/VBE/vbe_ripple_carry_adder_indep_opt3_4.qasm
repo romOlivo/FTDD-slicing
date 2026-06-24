@@ -1,0 +1,25 @@
+// Benchmark created by MQT Bench on 2025-10-16
+// For more info: https://www.cda.cit.tum.de/mqtbench/
+// MQT Bench version: 2.0.1
+// Qiskit version: 2.1.1
+// Output format: qasm3
+
+OPENQASM 3.0;
+include "stdgates.inc";
+gate Carry _gate_q_0, _gate_q_1, _gate_q_2, _gate_q_3 {
+  ccx _gate_q_1, _gate_q_2, _gate_q_3;
+  cx _gate_q_1, _gate_q_2;
+  ccx _gate_q_0, _gate_q_2, _gate_q_3;
+}
+gate Sum _gate_q_0, _gate_q_1, _gate_q_2 {
+  cx _gate_q_1, _gate_q_2;
+  cx _gate_q_0, _gate_q_2;
+}
+bit[4] meas;
+qubit[1] cin;
+qubit[1] a;
+qubit[1] b;
+qubit[1] cout;
+Carry cin[0], a[0], b[0], cout[0];
+cx a[0], b[0];
+Sum cin[0], a[0], b[0];
