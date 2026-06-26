@@ -1,4 +1,4 @@
-from qiskit.circuit.library import RXGate, RZGate
+from qiskit.circuit.library import RXGate, RZGate, RYGate
 from source.TDD_Q import get_real_qubit_num
 from qiskit import QuantumCircuit
 import math
@@ -84,6 +84,53 @@ def add_noise(circuit_limpio, epsilon_cx_ch=0.008, epsilon_xtalk=0.002):
             circuito_ruidoso.append(RZGate(epsilon_cz_phase), q_control)
             circuito_ruidoso.append(RZGate(epsilon_cz_phase), q_target)
 
+        elif instruccion.name in ['t', 'tdg']:
+            # La compuerta T es una rotación RZ(pi/4).
+            # El error común es una sobre-rotación o sub-rotación de fase.
+            # Introducimos un pequeño error epsilon_t en la rotación Z.
+            epsilon_t = 0.002
+            circuito_ruidoso.append(RZGate(epsilon_t), qubits)
+
+        elif instruccion.name == 'u':
+            # La compuerta U es RZ(phi) * RY(theta) * RZ(lambda).
+            # El error es una pequeña imprecisión en los ángulos controlados.
+            # Epsilon de error angular para la compuerta general.
+            epsilon_u = 0.003
+
+            # Introducimos una rotación parásita combinada para simular
+            # la imprecisión en la ejecución del pulso complejo.
+            circuito_ruidoso.append(RZGate(epsilon_u), qubits)
+            circuito_ruidoso.append(RXGate(epsilon_u), qubits)
+
+        elif instruccion.name == 'p':
+            # La compuerta P aplica un desfase en el estado |1>.
+            # El error es una sobre-rotación de fase (phi) sistemática.
+            epsilon_p = 0.002
+
+            # El error en una compuerta P es casi exclusivamente una fase Z extra.
+            circuito_ruidoso.append(RZGate(epsilon_p), qubits)
+
+        elif instruccion.name == 'rz':
+            # La compuerta RZ es una rotación RZ(theta).
+            # El error es una desviación en el ángulo de rotación debido a
+            # la imprecisión en el tiempo de aplicación del pulso o la frecuencia.
+            epsilon_rz = 0.001
+
+            # Aplicamos una pequeña sobre-rotación Z
+            circuito_ruidoso.append(RZGate(epsilon_rz), qubits)
+
+        elif instruccion.name == 'rx':
+            # Rotación en X. Error: pequeña rotación parásita en Y
+            epsilon_rx = 0.002
+            circuito_ruidoso.append(RXGate(epsilon_rx), qubits)
+            circuito_ruidoso.append(RYGate(epsilon_rx * 0.5), qubits)
+
+        elif instruccion.name == 'ry':
+            # Rotación en Y. Error: pequeña rotación parásita en X
+            epsilon_ry = 0.002
+            circuito_ruidoso.append(RYGate(epsilon_ry), qubits)
+            circuito_ruidoso.append(RXGate(epsilon_ry * 0.5), qubits)
+
         elif instruccion.name == 'cp':
             # Para la compuerta CP (dos qubits), el error de calibración física más común
             # es una fase ZZ residual parásita.
@@ -93,10 +140,27 @@ def add_noise(circuit_limpio, epsilon_cx_ch=0.008, epsilon_xtalk=0.002):
             circuito_ruidoso.append(RZGate(epsilon_cp_zz), q_control)
             circuito_ruidoso.append(RZGate(epsilon_cp_zz), q_target)
 
-        if instruccion.name in ['cx', 'cz', 'cp']:
-            for q_afectado in qubits:
-                for vecino in topologia.get(q_afectado, []):
-                    # Inyectamos error de cross-talk en el vecino
-                    # Usamos una rotación Z como error común
-                    circuito_ruidoso.append(RZGate(epsilon_xtalk), [vecino])
+        elif instruccion.name == 'swap':
+            # La puerta SWAP se implementa físicamente mediante una secuencia de 3 puertas CX.
+            # El ruido aquí es acumulativo: ruido de cada CX + ruido de cross-talk de cada una.
+            epsilon_swap = 0.005
+            # Aplicamos error en ambos qubits involucrados
+            circuito_ruidoso.append(RZGate(epsilon_swap), [qubits[0]])
+            circuito_ruidoso.append(RZGate(epsilon_swap), [qubits[1]])
+
+        elif instruccion.name == 'ccx':
+            # La puerta Toffoli (CCX) es una de las más costosas y ruidosas.
+            # Se descompone en varias puertas H, T, Tdg y CX.
+            # Aplicamos un ruido mayor debido a la profundidad lógica del pulso compuesto.
+            epsilon_ccx = 0.01
+            # Inyección de ruido en los tres qubits participantes (control, control, target)
+            for q in qubits:
+                circuito_ruidoso.append(RZGate(epsilon_ccx), [q])
+                circuito_ruidoso.append(RXGate(epsilon_ccx * 0.5), [q])
+
+        intensidad = 0.00005 * (10 ** len(qubits))
+
+        for q_afectado in qubits:
+            for vecino in topologia.get(q_afectado, []):
+                circuito_ruidoso.append(RZGate(intensidad), [vecino])
 
