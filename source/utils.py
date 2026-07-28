@@ -57,7 +57,7 @@ class OutputHandler:
                   process, helping in changing to print the values for punctual test and writing the results in
                   a more formal output.
     """
-    def __init__(self, tool, cont_method, circuit=None, sep="#"):
+    def __init__(self, tool, cont_method, circuit=None, sep="#", index_order="default"):
         """
             Input variables:
             tool ---------> Name of the tool used to simulate
@@ -66,6 +66,7 @@ class OutputHandler:
             sep ----------> Separator for the file
         """
         self.using_slicing = False
+        self.index_order = index_order
         self.cont_method = cont_method
         self.circuit = circuit
         self.tool = tool
@@ -82,7 +83,7 @@ class OutputHandler:
 
 
 class PrintOutputHandler(OutputHandler):
-    def __init__(self, tool, cont_method, circuit=None, sep="#"):
+    def __init__(self, tool, cont_method, circuit=None, sep="#", index_order="default"):
         """
             Input variables:
             tool -------> Name of the tool used to simulate
@@ -90,7 +91,7 @@ class PrintOutputHandler(OutputHandler):
             circuit ----> Circuit in the form of 'QuantumCircuit' class of qiskit
             sep --------> Separator for the file
         """
-        super().__init__(tool, cont_method, circuit, sep)
+        super().__init__(tool, cont_method, circuit, sep, index_order)
 
     def print_init(self, n_slices=0, other_data=None):
         text = "Simulating circuit"
@@ -99,6 +100,7 @@ class PrintOutputHandler(OutputHandler):
             text = f"{text} using slicing with {n_slices} slices"
         if self.circuit is not None:
             text = f"Circuit {self.circuit.name} {self.sep} {text}"
+        text = f"Using index order {self.index_order}:\n ->{text}"
         print(text)
 
     def print_time_result(self, time, it=-1, other_data=None):
@@ -117,7 +119,7 @@ class PrintOutputHandler(OutputHandler):
 
 
 class FileOutputHandler(OutputHandler):
-    def __init__(self, tool, cont_method, circuit=None, sep="#", file_name=None):
+    def __init__(self, tool, cont_method, circuit=None, sep="#", file_name=None, index_order="default"):
         """
             Input variables:
             tool -------> Name of the tool used to simulate
@@ -126,7 +128,7 @@ class FileOutputHandler(OutputHandler):
             sep --------> Separator for the file
             file_name --> Name of the file to write in
         """
-        super().__init__(tool, cont_method, circuit, sep)
+        super().__init__(tool, cont_method, circuit, sep, index_order)
         self.file_name = file_name
         self.path = "./source/output"
         self.file = None
@@ -195,7 +197,7 @@ class FileOutputHandler(OutputHandler):
 
 
 class SameFileOutputHandler(FileOutputHandler):
-    def __init__(self, tool, cont_method, circuit=None, sep="#", file_name=None):
+    def __init__(self, tool, cont_method, circuit=None, sep="#", file_name=None, index_order="default"):
         """
             Input variables:
             tool -------> Name of the tool used to simulate
@@ -204,7 +206,7 @@ class SameFileOutputHandler(FileOutputHandler):
             sep --------> Separator for the file
             file_name --> Name of the file to write in
         """
-        super().__init__(tool, cont_method, circuit, sep, file_name)
+        super().__init__(tool, cont_method, circuit, sep, file_name, index_order)
 
     def create_file_name(self, n_slices):
         file_name = "test"
@@ -216,11 +218,11 @@ class SameFileOutputHandler(FileOutputHandler):
         if self.using_slicing:
             file_name = f"{file_name}{self.sep}slc{self.sep}{n_slices}"
         file_name = f"{self.tool}{self.sep}{file_name}"
-        self.file_name = f"{file_name}.csv"
+        self.file_name = f"{self.index_order}_{file_name}.csv"
 
 
 class HybridOutputHandler(OutputHandler):
-    def __init__(self, tool, cont_method, circuit=None, sep="#", file_name=None):
+    def __init__(self, tool, cont_method, circuit=None, sep="#", file_name=None, index_order="default"):
         """
             Input variables: hybrid
             tool -------> Name of the tool used to simulate
@@ -229,9 +231,9 @@ class HybridOutputHandler(OutputHandler):
             sep --------> Separator for the file
             file_name --> Name of the file to write in
         """
-        super().__init__(tool, cont_method, circuit, sep)
-        self.printer = PrintOutputHandler(tool, cont_method, circuit, sep)
-        self.writer = SameFileOutputHandler(tool, cont_method, circuit, sep, file_name)
+        super().__init__(tool, cont_method, circuit, sep, index_order)
+        self.printer = PrintOutputHandler(tool, cont_method, circuit, sep, index_order)
+        self.writer = SameFileOutputHandler(tool, cont_method, circuit, sep, file_name, index_order)
 
     def print_init(self, n_slices=0, other_data=None):
         self.printer.print_init(n_slices, other_data)

@@ -14,7 +14,6 @@ colorlog==6.9.0
 comm==0.2.2
 contourpy==1.1.1
 cotengra==0.7.5
-cotengrust==0.1.4
 cryptography==44.0.0
 cycler==0.12.1
 cytoolz==1.0.1

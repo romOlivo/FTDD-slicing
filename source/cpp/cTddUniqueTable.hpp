@@ -235,37 +235,37 @@ public:
         Functions for garbage collection
     */
     // increment reference counter for node e points to and recursively increment reference counter for each child if this is the first reference
-    void incr_ref_count(const Edge& edge) {
+    void incr_ref_count(Node* node) {
         // Check if node is terminal or if ref count already hits max: not proceed in these cases
-        if ((edge.node == node_n1) || (edge.node->refCnt == std::numeric_limits<refCntType>::max())) { return; }
+        if ((node == node_n1) || (node->refCnt == std::numeric_limits<refCntType>::max())) { return; }
 
         // Increment reference count
-        edge.node->refCnt += 1;
+        node->refCnt += 1;
 
         // Increment the reference count of children if it is the first reference for this node 
-        if (edge.node->refCnt == 1) {
-            for (const auto& edge: edge.node->edges) { incr_ref_count(edge); }
+        if (node->refCnt == 1) {
+            for (const auto& edge: node->edges) { incr_ref_count(edge.node); }
             activeNodeCount++;
         }
     }
 
     // decrement reference counter for node e points to and recursively decrement reference counter for each child if this is the last reference
-    void decr_ref_count(const Edge& edge) {
+    void decr_ref_count(Node* node) {
         // Check if node is terminal or if ref count already hits max: not proceed in these cases
-        if ((edge.node == node_n1) || (edge.node->refCnt == std::numeric_limits<refCntType>::max())) { return; }
+        if ((node == node_n1) || (node->refCnt == std::numeric_limits<refCntType>::max())) { return; }
 
         // Decrement reference count
-        edge.node->refCnt -= 1;
+        node->refCnt -= 1;
 
         // Decrement the reference count of children if it is the last reference for this node 
-        if (edge.node->refCnt == 0) {
-            for (const auto& edge: edge.node->edges) { decr_ref_count(edge); }
+        if (node->refCnt == 0) {
+            for (const auto& edge: node->edges) { decr_ref_count(edge.node); }
             activeNodeCount--;
         }
     }
 
     // return collected node to the available list
-    void returnNode(Node* p) {
+    inline void returnNode(Node* p) {
         p->next   = available;
         available = p;
     }
@@ -278,12 +278,15 @@ public:
         // Start garbage collection for unique table
         gcRuns++;
         std::size_t collected = 0; std::size_t remaining = 0;
+        Node* pNode;
+        Node* prev;
+        Node* next;
         for (auto& bucket: tables) { // a bucket in the table
-            Node* pNode = bucket;
-            Node* prev = nullptr;
+            pNode = bucket;
+            prev = nullptr;
             while (pNode != nullptr) {
                 if (pNode->refCnt == 0) { // Collect this node
-                    Node* next = pNode->next;
+                    next = pNode->next;
                     if (prev == nullptr) { // head of list
                         bucket = next;
                     } else { // in the middle
