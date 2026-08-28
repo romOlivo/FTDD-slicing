@@ -4,7 +4,8 @@
 
 """
 
-from source.TDD_Q import PyTN_2_cTN, cir_2_tn_lbl, get_real_qubit_num, add_inputs
+from source.TDD_Q import cir_2_tn_lbl, get_real_qubit_num, add_inputs
+from source.Simulate import PyTN_2_cTN
 from source.Test.creatorCircuitQasmStr import CircuitCreator
 from source.utils import generate_ftdd_data
 from source.TDD import equal_tolerance

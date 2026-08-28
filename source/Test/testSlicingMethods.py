@@ -3,8 +3,8 @@
     This file was created and documented by Vicente Lopez (voliva@uji.es, @romOlivo) for testing purposes.
 
 """
-from source.TDD_Q import cir_2_tn_lbl, get_real_qubit_num, add_inputs, add_outputs, get_order_max, apply_full_tetris
-from source.TDD_Q import get_slice_cot
+from source.TDD_Q import cir_2_tn_lbl, get_real_qubit_num, add_inputs, add_outputs
+from source.Simulate import get_slice_cot, get_order_max, apply_full_tetris
 from source.Test.creatorCircuitQasmStr import CircuitCreator
 from qiskit import QuantumCircuit
 import unittest

@@ -4,7 +4,8 @@
 
 """
 
-from source.TDD_Q import cir_2_tn_lbl, get_real_qubit_num, add_inputs, add_outputs, TNtoCotInput, apply_full_tetris
+from source.TDD_Q import cir_2_tn_lbl, get_real_qubit_num, add_inputs, add_outputs, TNtoCotInput
+from source.Simulate import apply_full_tetris
 from source.Test.creatorCircuitQasmStr import CircuitCreator
 from qiskit import QuantumCircuit
 from source.TDD import Ini_TDD

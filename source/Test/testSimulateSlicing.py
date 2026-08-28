@@ -6,7 +6,7 @@
 
 from source.Test.creatorCircuitQasmStr import CircuitCreator
 from source.TDD import equal_tolerance
-from source.TDD_Q import simulate
+from source.Simulate import simulate
 from qiskit import QuantumCircuit
 import unittest
 
