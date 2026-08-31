@@ -3,7 +3,7 @@
     This file was created and documented by Vicente Lopez (voliva@uji.es, @romOlivo) for testing purposes.
 
 """
-
+from source.IndexOrder import calculate_order
 from source.TDD_Q import cir_2_tn_lbl, get_real_qubit_num, add_inputs
 from source.Simulate import PyTN_2_cTN
 from source.Test.creatorCircuitQasmStr import CircuitCreator
@@ -11,6 +11,7 @@ from source.utils import generate_ftdd_data
 from source.TDD import equal_tolerance
 import source.cpp.build.cTDD as cTDD
 from qiskit import QuantumCircuit
+from qiskit.quantum_info import Statevector
 import unittest
 
 creator = CircuitCreator()
@@ -59,7 +60,7 @@ def adapt_tdd_result(tdd):
     return [adapt_tdd_result(tdd[:i_mid]), adapt_tdd_result(tdd[i_mid:])]
 
 
-def make_sim(cir, uniq_config, path):
+def make_sim(cir, uniq_config, path, adapt=True, index_order_method="default"):
     """
         Makes one simulation close - open with cTDD
     """
@@ -67,11 +68,13 @@ def make_sim(cir, uniq_config, path):
     n = get_real_qubit_num(cir)
     state = [0] * n
     add_inputs(tn, state, n)
-    cTDD.Ini_TDD(all_indices_lbl, uniq_config, False)
+    index_order = calculate_order(index_order_method, tn.tensors, path, default=all_indices_lbl)
+    cTDD.Ini_TDD(index_order, uniq_config, False)
     tn = PyTN_2_cTN(tn)
-    tdd = tn.cont_TN(path, False).to_array()
-    tdd_adapted = adapt_tdd_result(tdd)
-    return tdd_adapted
+    tdd = tn.cont_TN(path, False)
+    if adapt:
+        tdd = adapt_tdd_result(tdd.to_array())
+    return tdd
 
 
 def generate_path(n_qubits, block_gates, mid_gates):
@@ -178,3 +181,75 @@ class TestFTDD(unittest.TestCase):
         self.assertEqual(17, data['gc'])
         self.assertTrue(0 < data['cont_collisions'])
         self.assertTrue(equal_tolerance(creator.get_tricky_circuit_solution_close_open(), result))
+
+    def test_statevector_default_normal_small(self):
+        cir = create_small_circuit()
+        n_bucket = 32000
+        initial_gc_limit = 20
+        initial_gc_lur = 0.9
+        act_bucket = 32768
+        cct_bucket = 32768
+        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket]
+        path = ((0, 1), (0, 1), (0, 1), (0, 1), (0, 1))
+        result = make_sim(cir, uniqTabConfig, path, adapt=False)
+        self.assertTrue(Statevector(cir), Statevector(result.to_array()))
+
+    def test_statevector_default_tricky_small(self):
+        cir = create_tricky_circuit()
+        n_bucket = 32000
+        initial_gc_limit = 20
+        initial_gc_lur = 0.9
+        act_bucket = 32768
+        cct_bucket = 32768
+        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket]
+        path = generate_path(n_qubits=3, block_gates=6, mid_gates=4)
+        result = make_sim(cir, uniqTabConfig, path, adapt=False)
+        self.assertTrue(Statevector(cir), Statevector(result.to_array()))
+
+    def test_statevector_default_medium_small(self):
+        cir = create_medium_circuit()
+        n_bucket = 32000
+        initial_gc_limit = 20
+        initial_gc_lur = 0.9
+        act_bucket = 32768
+        cct_bucket = 32768
+        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket]
+        path = [(0, 1) for _ in range(cir.size() + 2)]
+        result = make_sim(cir, uniqTabConfig, path, adapt=False)
+        self.assertTrue(Statevector(cir), Statevector(result.to_array()))
+
+    def test_statevector_path_normal_small(self):
+        cir = create_small_circuit()
+        n_bucket = 32000
+        initial_gc_limit = 20
+        initial_gc_lur = 0.9
+        act_bucket = 32768
+        cct_bucket = 32768
+        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket]
+        path = ((0, 1), (0, 1), (0, 1), (0, 1), (0, 1))
+        result = make_sim(cir, uniqTabConfig, path, adapt=False, index_order_method="path")
+        self.assertTrue(Statevector(cir), Statevector(result.to_array()))
+
+    def test_statevector_path_tricky_small(self):
+        cir = create_tricky_circuit()
+        n_bucket = 32000
+        initial_gc_limit = 20
+        initial_gc_lur = 0.9
+        act_bucket = 32768
+        cct_bucket = 32768
+        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket]
+        path = generate_path(n_qubits=3, block_gates=6, mid_gates=4)
+        result = make_sim(cir, uniqTabConfig, path, adapt=False, index_order_method="path")
+        self.assertTrue(Statevector(cir), Statevector(result.to_array()))
+
+    def test_statevector_path_medium_small(self):
+        cir = create_medium_circuit()
+        n_bucket = 32000
+        initial_gc_limit = 20
+        initial_gc_lur = 0.9
+        act_bucket = 32768
+        cct_bucket = 32768
+        uniqTabConfig = [initial_gc_limit, initial_gc_lur, n_bucket, act_bucket, cct_bucket]
+        path = [(0, 1) for _ in range(cir.size() + 2)]
+        result = make_sim(cir, uniqTabConfig, path, adapt=False, index_order_method="path")
+        self.assertTrue(Statevector(cir), Statevector(result.to_array()))
