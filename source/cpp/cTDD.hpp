@@ -34,6 +34,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 constexpr auto byref = py::return_value_policy::reference_internal;
@@ -202,7 +203,7 @@ public:
 
     complexArrayType to_array();
 
-    std::complex<dataType> get_amplitude(py::list index_values);
+    std::complex<dataType> get_amplitude(std::vector<int> index_values);
     
     void get_measure_prob();
 
@@ -339,7 +340,8 @@ public:
         }
     }
 
-    TDD cont_TN(py::tuple path, bool debug=false);
+    // @romOlivo: Changed for fixing the GIL problem
+    TDD cont_TN(const std::vector<std::pair<int, int>>& path, bool debug=false);
 };
 
 

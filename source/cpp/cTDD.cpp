@@ -8,6 +8,8 @@
  *
  * Modified by Vicente Lopez (voliva@uji.es). Modifications will be marked with @romOlivo.
  *   - Showing the new metrics.
+ *   - New binding to be able to use tdd addition
+ *   - Fixed the GIL problem
  */
 
 #include "cTDD.hpp"
@@ -32,9 +34,19 @@ PYBIND11_MODULE(cTDD, m) {
     .def("str", &Index::str, py::call_guard<py::gil_scoped_release>())
     ;
 
+    // @romOlivo Binding Edge in C++ for being able to use TDD Addition
+    py::class_<Edge>(m, "Edge")
+        .def(py::init<>())
+        .def(py::init<Node*>())
+        .def_readwrite("weight", &Edge::weight)
+        .def("__eq__", &Edge::operator==, py::call_guard<py::gil_scoped_release>())
+        ;
+
     // Binding TDD in C++
     py::class_<TDD>(m, "TDD")
     .def(py::init<>())
+    .def(py::init<Edge>())                          // @romOlivo for instantiating TDD(edge)
+    .def_readwrite("root", &TDD::root)              // @romOlivo to ve able to read/write tdd.root
     .def("__eq__", &TDD::operator==, py::call_guard<py::gil_scoped_release>())
     .def("str", &TDD::str, py::call_guard<py::gil_scoped_release>())
     .def("node_number", &TDD::node_number, py::call_guard<py::gil_scoped_release>())
@@ -81,6 +93,10 @@ PYBIND11_MODULE(cTDD, m) {
 
     // Binding Clear_TDD() in C++
     m.def("Clear_TDD", &Clear_TDD, "The function that clears all global variables.");
+
+    // @romOlivo Binding TDD Addition
+    m.def("add", &add, "Function that performs TDD addition.", py::call_guard<py::gil_scoped_release>());
+
 }
 
 
@@ -204,15 +220,9 @@ complexArrayType TDD::to_array() {
     return U_ptr->vec;
 }
 
-std::complex<dataType> TDD::get_amplitude(py::list index_values) {
-    std::vector<int> index_values_;
-    int ind;
-    for (uint k = 0; k < index_values.size(); k++) {
-        ind = index_values[k].cast<int>();
-        index_values_.push_back(ind);
-    }
-
-    return root.get_amplitude_recur(index_values_);
+// @romOlivo: Reworked for fixing the GIL problem
+std::complex<dataType> TDD::get_amplitude(std::vector<int> index_values) {
+    return root.get_amplitude_recur(index_values);
 }
 
 void TDD::get_measure_prob() {
@@ -241,7 +251,8 @@ TDD Tensor::tdd() {
 /*
     TensorNetwork
 */
-TDD TensorNetwork::cont_TN(py::tuple path, bool debug) {
+// @romOlivo Change the signature for solving the GIL problem
+TDD TensorNetwork::cont_TN(const std::vector<std::pair<int, int>>& path, bool debug) {
     std::vector<TDD> tdd_list(tensors.size());
 
     // Convert all tensors to TDDs beforehand
@@ -252,9 +263,7 @@ TDD TensorNetwork::cont_TN(py::tuple path, bool debug) {
 
     // Contraction
     for (uint i = 0; i < path.size(); i++) {
-        py::tuple pair_tuple = path[i];
-        std::pair<int, int> pair; pair.first = pair_tuple[0].cast<int>(); pair.second = pair_tuple[1].cast<int>();
-        
+        std::pair<int, int> pair = path[i];  // @romOlivo Changed for matching the new signature
         // Acquire the tensors/TDDs pointed to by the pair
         TDD tdd_a = tdd_list[pair.first];
         TDD tdd_b = tdd_list[pair.second];
