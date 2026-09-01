@@ -241,9 +241,9 @@ public:
         Hash functions
     */
     // FNV-1a
-    std::size_t hash(Node* node1, Node* node2,
-                                     const std::vector<keyType>& v0, std::size_t len0,
-                                     const std::vector<keyType>& v1, std::size_t len1) {
+    std::size_t hash(const Node* node1, const Node* node2,
+                                     const std::vector<keyType>& v0, const std::size_t len0,
+                                     const std::vector<keyType>& v1, const std::size_t len1) {
         hashType hash = fnv_offset_basis;
 
         // hash the node shared pointers
@@ -270,83 +270,82 @@ public:
     }
 
 
-    /* 
+    /*
         Functions for the computed cache look up
     */
     // Insert an entry to the computed cache
     void insert(Node* node1, Node* node2,
-            const std::vector<keyType>& v1, std::size_t len1,
-            const std::vector<keyType>& v2, std::size_t len2,
+            const std::vector<keyType>& v1, const std::size_t len1,
+            const std::vector<keyType>& v2, const std::size_t len2,
             const Edge& res) {
 
-    std::size_t hashVal = hash(node1, node2, v1, len1, v2, len2);
-    Entry* entry = table[hashVal];
+        std::size_t hashVal = hash(node1, node2, v1, len1, v2, len2);
+        Entry* entry = table[hashVal];
 
-    // @romOlivo: Added for counting collisions and to be able to remove nodes not used by this table.
-    if (entry != nullptr) {
-        collisions++;
-        unique_table.decr_ref_count(entry->node1);
-        unique_table.decr_ref_count(entry->node2);
-        unique_table.decr_ref_count(entry->res.node);
-    } else {
-        entry = pool.get();
-        table[hashVal] = entry;
+        // @romOlivo: Added for counting collisions and to be able to remove nodes not used by this table.
+        if (entry != nullptr) {
+            collisions++;
+            unique_table.decr_ref_count(entry->node1);
+            unique_table.decr_ref_count(entry->node2);
+            unique_table.decr_ref_count(entry->res.node);
+        } else {
+            entry = pool.get();
+            table[hashVal] = entry;
+        }
+
+        // @romOlivo: Changed for a direct copy of the vector
+        entry->node1 = node1;
+        entry->node2 = node2;
+        if (entry->key_2_new_key_1.size() < len1) {
+            entry->key_2_new_key_1.resize(len1);
+        }
+        std::memcpy(entry->key_2_new_key_1.data(), v1.data(), len1 * sizeof(keyType));
+
+        if (entry->key_2_new_key_2.size() < len2) {
+            entry->key_2_new_key_2.resize(len2);
+        }
+        std::memcpy(entry->key_2_new_key_2.data(), v2.data(), len2 * sizeof(keyType));
+        entry->t1 = len1;
+        entry->t2 = len2;
+        entry->res = res;
+
+        // @romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
+        unique_table.incr_ref_count(node1);
+        unique_table.incr_ref_count(node2);
+        unique_table.incr_ref_count(res.node);
     }
 
-    // @romOlivo: Changed for a direct copy of the vector
-    entry->node1 = node1;
-    entry->node2 = node2;
-    if (entry->key_2_new_key_1.size() < len1) {
-        entry->key_2_new_key_1.resize(len1);
-    }
-    std::memcpy(entry->key_2_new_key_1.data(), v1.data(), len1 * sizeof(keyType));
+    Edge find(const Node* node1, const Node* node2,
+          const std::vector<keyType>& v1, const std::size_t len1,
+          const std::vector<keyType>& v2, const std::size_t len2) {
+        lookups++;
 
-    if (entry->key_2_new_key_2.size() < len2) {
-        entry->key_2_new_key_2.resize(len2);
-    }
-    std::memcpy(entry->key_2_new_key_2.data(), v2.data(), len2 * sizeof(keyType));
-    entry->t1 = len1;
-    entry->t2 = len2;
-    entry->res = res;
+        // Find edge1 op edge2
+        std::size_t hashVal = hash(node1, node2, v1, len1, v2, len2);
+        Entry* entry = table[hashVal];
 
-    // @romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
-    unique_table.incr_ref_count(node1);
-    unique_table.incr_ref_count(node2);
-    unique_table.incr_ref_count(res.node);
-}
-Edge find(Node* node1, Node* node2,
-          const std::vector<keyType>& v1, std::size_t len1,
-          const std::vector<keyType>& v2, std::size_t len2) {
-    lookups++;
-
-    // Find edge1 op edge2
-    std::size_t hashVal = hash(node1, node2, v1, len1, v2, len2);
-    Entry* entry = table[hashVal];
-
-    if (entry != nullptr && entry->node1 == node1 && entry->node2 == node2 && len1 == entry->t1 && len2 == entry->t2) {
-            if (std::equal(entry->key_2_new_key_1.begin(), entry->key_2_new_key_1.end(), v1.begin()) &&
-                std::equal(entry->key_2_new_key_2.begin(), entry->key_2_new_key_2.end(), v2.begin())) {
+        if (entry != nullptr && entry->node1 == node1 && entry->node2 == node2 && len1 == entry->t1 && len2 == entry->t2) {
+            if (std::memcmp(entry->key_2_new_key_1.data(), v1.data(), len1 * sizeof(keyType)) == 0 &&
+                std::memcmp(entry->key_2_new_key_2.data(), v2.data(), len2 * sizeof(keyType)) == 0) {
                 hits++;
                 return entry->res;
             }
-    }
+        }
 
-    // Find edge2 op edge1
-    hashVal = hash(node2, node1, v2, len2, v1, len1);
-    Entry* entry_comm = table[hashVal];
+        // Find edge2 op edge1
+        hashVal = hash(node2, node1, v2, len2, v1, len1);
+        Entry* entry_comm = table[hashVal];
 
-    if (entry_comm != nullptr && entry_comm->node1 == node2 && entry_comm->node2 == node1) {
-        if (len1 == entry_comm->t2 && len2 == entry_comm->t1) {
-            if (std::equal(entry_comm->key_2_new_key_1.begin(), entry_comm->key_2_new_key_1.end(), v2.begin()) &&
-                std::equal(entry_comm->key_2_new_key_2.begin(), entry_comm->key_2_new_key_2.end(), v1.begin())) {
+        if (entry_comm != nullptr && entry_comm->node1 == node2 && entry_comm->node2 == node1 && len1 == entry_comm->t2 && len2 == entry_comm->t1) {
+            if (std::memcmp(entry_comm->key_2_new_key_1.data(), v2.data(), len2 * sizeof(keyType)) == 0 &&
+                std::memcmp(entry_comm->key_2_new_key_2.data(), v1.data(), len1 * sizeof(keyType)) == 0) {
                 hits++;
                 return entry_comm->res;
             }
         }
-    }
 
-    return Edge();
-}
+        return Edge();
+    }
 
 private:
     // Cache entry
