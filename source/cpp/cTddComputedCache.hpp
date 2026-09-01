@@ -65,12 +65,8 @@ public:
         Hash functions
     */
     // FNV-1a
-    std::size_t hash(const Edge& edge1, const Edge& edge2) {
+    std::size_t hash(const Edge& edge1, const Edge& edge2, const std::complex<dataType>& ratio) {
         hashType hash_value = fnv_offset_basis;
-
-        std::complex<dataType> ratio = (edge1.weight != static_cast<dataType>(0))
-                                       ? (edge2.weight / edge1.weight)
-                                       : edge2.weight;
 
         std::tuple<int, int> ratio_key = get_int_key(ratio);
         const unsigned char* bytes = reinterpret_cast<const unsigned char*>(&ratio_key);
@@ -94,12 +90,15 @@ public:
     }
 
 
-    /* 
+    /*
         Functions for the computed cache look up
     */
     // Insert an entry to the computed cache
     void insert(const Edge& edge1, const Edge& edge2, const Edge& res) {
-        std::size_t hashVal = hash(edge1, edge2);
+        std::complex<dataType> ratio = (edge1.weight != static_cast<dataType>(0))
+                                      ? (edge2.weight / edge1.weight)
+                                      : edge2.weight;
+        std::size_t hashVal = hash(edge1, edge2, ratio);
         // @romOlivo: Added for counting collisions and to be able to remove nodes not used by this table.
         Entry* entry = table[hashVal];
         if (entry == nullptr) {
@@ -115,9 +114,7 @@ public:
         entry->edge1 = edge1;
         entry->edge2 = edge2;
         // @romOlivo: Now this edge will store the ratio, so only 1 time is computed
-        entry->edge2.weight = (edge1.weight != static_cast<dataType>(0))
-                                ? (edge2.weight / edge1.weight)
-                                : edge2.weight;
+        entry->edge2.weight = ratio;
         entry->res = res;
         // @romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
         unique_table.incr_ref_count(edge1.node);
@@ -129,21 +126,20 @@ public:
     // Find an entry in the computed cache
     Edge find(const Edge& edge1, const Edge& edge2) {
         lookups++;
-        std::complex<dataType> ratio12;
+        // Calculate the ratio
+        std::complex<dataType> ratio = (edge1.weight != static_cast<dataType>(0))
+                                      ? (edge2.weight / edge1.weight)
+                                      : edge2.weight;
 
         // Search edge1 op edge2
-        std::size_t hashVal = hash(edge1, edge2);
+        std::size_t hashVal = hash(edge1, edge2, ratio);
         Entry* entry = table[hashVal];
 
         if (entry != nullptr){
-            // Calculate the ratio
-            ratio12 = (edge1.weight != static_cast<dataType>(0))
-                           ? (edge2.weight / edge1.weight)
-                           : edge2.weight;
             // If nodes and ratio are the same, then is equivalent
             if (entry->edge1.node == edge1.node &&
             entry->edge2.node == edge2.node &&
-            get_int_key(entry->edge2.weight) == get_int_key(ratio12)) {
+            get_int_key(entry->edge2.weight) == get_int_key(ratio)) {
 
             hits++;
             Edge res = entry->res;
