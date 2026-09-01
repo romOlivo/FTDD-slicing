@@ -9,6 +9,8 @@
  * Modified by Vicente Lopez (voliva@uji.es). Modifications will be marked with @romOlivo.
  *   - Compute table increase the references of nodes in use.
  *   - Compute table checks for overwritten results
+ *   - ContComputedCache now reserves memory for copying indices
+ *   - AddComputedCache now can find equivalent operations
  */
 
 
@@ -64,25 +66,31 @@ public:
     */
     // FNV-1a
     std::size_t hash(const Edge& edge1, const Edge& edge2) {
-        hashType hash = fnv_offset_basis;
+        hashType hash_value = fnv_offset_basis;
 
-        // hash the out weights
-        std::tuple<int, int> weight = get_int_key(edge1.weight);
-        const unsigned char* bytes = reinterpret_cast<const unsigned char*>(&weight);
-        for (std::size_t i = 0; i < sizeof(std::tuple<int, int>); i++) { hash = ( hash ^ static_cast<hashType>(bytes[i]) ) * fnv_prime; }
-        weight = get_int_key(edge2.weight);
-        bytes = reinterpret_cast<const unsigned char*>(&weight);
-        for (std::size_t i = 0; i < sizeof(std::tuple<int, int>); i++) { hash = ( hash ^ static_cast<hashType>(bytes[i]) ) * fnv_prime; }
+        std::complex<dataType> ratio = (edge1.weight != static_cast<dataType>(0))
+                                       ? (edge2.weight / edge1.weight)
+                                       : edge2.weight;
 
-        // hash the successor shared pointers
+        std::tuple<int, int> ratio_key = get_int_key(ratio);
+        const unsigned char* bytes = reinterpret_cast<const unsigned char*>(&ratio_key);
+        for (std::size_t i = 0; i < sizeof(std::tuple<int, int>); i++) {
+            hash_value = (hash_value ^ static_cast<hashType>(bytes[i])) * fnv_prime;
+        }
+
         std::uintptr_t val = reinterpret_cast<std::uintptr_t>(edge1.node);
         bytes = reinterpret_cast<const unsigned char*>(&val);
-        for (std::size_t i = 0; i < sizeof(std::uintptr_t); i++) { hash = ( hash ^ static_cast<hashType>(bytes[i]) ) * fnv_prime; }
+        for (std::size_t i = 0; i < sizeof(std::uintptr_t); i++) {
+            hash_value = (hash_value ^ static_cast<hashType>(bytes[i])) * fnv_prime;
+        }
+
         val = reinterpret_cast<std::uintptr_t>(edge2.node);
         bytes = reinterpret_cast<const unsigned char*>(&val);
-        for (std::size_t i = 0; i < sizeof(std::uintptr_t); i++) { hash = ( hash ^ static_cast<hashType>(bytes[i]) ) * fnv_prime; }
+        for (std::size_t i = 0; i < sizeof(std::uintptr_t); i++) {
+            hash_value = (hash_value ^ static_cast<hashType>(bytes[i])) * fnv_prime;
+        }
 
-        return static_cast<std::size_t>(hash & MASK);
+        return static_cast<std::size_t>(hash_value & MASK);
     }
 
 
@@ -103,8 +111,13 @@ public:
             unique_table.decr_ref_count(entry->edge2.node);
             unique_table.decr_ref_count(entry->res.node);
         }
+        // @romOlivo: Important to not change this weight, as it is needed to scalate the result in find
         entry->edge1 = edge1;
         entry->edge2 = edge2;
+        // @romOlivo: Now this edge will store the ratio, so only 1 time is computed
+        entry->edge2.weight = (edge1.weight != static_cast<dataType>(0))
+                                ? (edge2.weight / edge1.weight)
+                                : edge2.weight;
         entry->res = res;
         // @romOlivo: Added so now nodes used in this table can not be removed by the garbage collector.
         unique_table.incr_ref_count(edge1.node);
@@ -112,25 +125,58 @@ public:
         unique_table.incr_ref_count(res.node);
     }
 
+    // @romOlivo: Reworked so now it can detect equivalent additions
     // Find an entry in the computed cache
     Edge find(const Edge& edge1, const Edge& edge2) {
         lookups++;
-        
-        // Find edge1 op edge2
+        std::complex<dataType> ratio12;
+
+        // Search edge1 op edge2
         std::size_t hashVal = hash(edge1, edge2);
-        Entry*      entry = table[hashVal];
-        if ((entry != nullptr) && (entry->edge1 == edge1) && (entry->edge2 == edge2)) { // found
+        Entry* entry = table[hashVal];
+
+        if (entry != nullptr){
+            // Calculate the ratio
+            ratio12 = (edge1.weight != static_cast<dataType>(0))
+                           ? (edge2.weight / edge1.weight)
+                           : edge2.weight;
+            // If nodes and ratio are the same, then is equivalent
+            if (entry->edge1.node == edge1.node &&
+            entry->edge2.node == edge2.node &&
+            get_int_key(entry->edge2.weight) == get_int_key(ratio12)) {
+
             hits++;
-            return entry->res;
+            Edge res = entry->res;
+            // Scale up the result
+            res.weight *= (edge1.weight / entry->edge1.weight);
+            return res;
+            }
         }
 
-        // Find edge2 op edge1
+        // @romOlivo: Although it seems natural to do, i could not found any case in which this was beneficial
+        /*
+        // Search edge2 op edge1
         hashVal = hash(edge2, edge1);
         entry = table[hashVal];
-        if ((entry != nullptr) && (entry->edge1 == edge2) && (entry->edge2 == edge1)) { // found
+
+        if (entry != nullptr){
+            // Calculate the ratio
+            ratio12 = (edge2.weight != static_cast<dataType>(0))
+                                       ? (edge1.weight / edge2.weight)
+                                       : edge1.weight;
+            // If nodes and ratio are the same, then is equivalent
+            if (entry->edge1.node == edge2.node &&
+            entry->edge2.node == edge1.node &&
+            get_int_key(entry->edge2.weight) == get_int_key(ratio12)) {
+
             hits++;
-            return entry->res;
+            Edge res = entry->res;
+            // Scale up the result
+            res.weight *= (edge2.weight / entry->edge1.weight);
+            return res;
+            }
         }
+        */
 
         return Edge();
     }
@@ -251,7 +297,7 @@ public:
         table[hashVal] = entry;
     }
 
-    // @romOlivo: Changed for an direct copy of the vector
+    // @romOlivo: Changed for a direct copy of the vector
     entry->node1 = node1;
     entry->node2 = node2;
     if (entry->key_2_new_key_1.size() < len1) {
