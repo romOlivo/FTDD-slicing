@@ -34,13 +34,21 @@ PYBIND11_MODULE(cTDD, m) {
     .def("str", &Index::str, py::call_guard<py::gil_scoped_release>())
     ;
 
+    // @romOlivo Binding Edge in C++ for being able to test TDD Addition
+    py::class_<Node>(m, "Node")
+        .def(py::init<>())
+        .def_readwrite("key", &Node::key)
+        .def_readwrite("edges", &Node::edges)
+    ;
+
     // @romOlivo Binding Edge in C++ for being able to use TDD Addition
     py::class_<Edge>(m, "Edge")
         .def(py::init<>())
         .def(py::init<Node*>())
         .def_readwrite("weight", &Edge::weight)
+        .def_readwrite("node", &Edge::node, py::return_value_policy::reference)
         .def("__eq__", &Edge::operator==, py::call_guard<py::gil_scoped_release>())
-        ;
+    ;
 
     // Binding TDD in C++
     py::class_<TDD>(m, "TDD")

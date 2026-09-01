@@ -5,22 +5,26 @@
 """
 
 
-import unittest
 from source.Test import testToArray, testAddTdd, testSimpleTNContraction, testSimulate, testSimulateSlicing, \
-    testSimulateBackends, testTNtoCotInput, testTNContraction, testSlicingMethods, testContractingMethods
-
+    testSimulateBackends, testTNtoCotInput, testTNContraction, testSlicingMethods, testContractingMethods, testAddFETDD, \
+    testFTDD
+import unittest
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     test_modules = [
         testToArray,
         testAddTdd,
+        testAddFETDD,
+        testFTDD,
         testTNtoCotInput,
         testSimpleTNContraction,
         testContractingMethods,
         testTNContraction,
         testSimulate,
         testSimulateBackends,
+
+
         # testSlicingMethods,
         # testSimulateSlicing
     ]
