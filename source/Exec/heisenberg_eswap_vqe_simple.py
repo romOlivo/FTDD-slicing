@@ -24,6 +24,7 @@ import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit import ParameterVector
 from qiskit.quantum_info import SparsePauliOp, Statevector
+from source.Simulate import simulate
 
 
 def append_eswap(circuit, q0, q1, theta):
@@ -81,11 +82,18 @@ def make_heisenberg_hamiltonian(num_qubits, coupling=1.0):
     return SparsePauliOp.from_sparse_list(terms, num_qubits=num_qubits)
 
 
-def statevector(circuit, parameters, values):
+def statevector(circuit, parameters, values, use_tdd=False):
     """Evaluate the parameterized circuit and return its state vector."""
     parameter_map = dict(zip(parameters, values))
     bound_circuit = circuit.assign_parameters(parameter_map)
-    return Statevector(bound_circuit)
+    result = None
+    if use_tdd:
+        tdd = simulate(bound_circuit, is_input_closed=True, is_output_closed=False, handler_name="none",
+                       backend="FTDD", contraction_method="seq", use_tetris=True, index_order_method="path")
+        result = Statevector(tdd.to_array())
+    else:
+        result = Statevector(bound_circuit)
+    return result
 
 
 def energy(circuit, parameters, values, hamiltonian):
@@ -122,12 +130,15 @@ def parameter_shift_gradient(circuit, parameters, values, hamiltonian):
 
 def exact_ground_state(hamiltonian):
     """Dense exact diagonalization for a small reference system."""
-    matrix = hamiltonian.to_matrix()
-    eigenvalues, eigenvectors = np.linalg.eigh(matrix)
-    return float(eigenvalues[0]), Statevector(eigenvectors[:, 0])
+    import scipy.sparse.linalg as spla
+    sparse_matrix = hamiltonian.to_matrix(sparse=True)
+    eigenvalues, eigenvectors = spla.eigsh(sparse_matrix, k=1, which="SA")
+
+    return float(eigenvalues[0].real), Statevector(eigenvectors[:, 0])
 
 
 def run_vqe(num_qubits, depth, iterations, learning_rate, seed, print_every):
+    from time import time
     circuit, parameters = make_ansatz(num_qubits, depth)
     hamiltonian = make_heisenberg_hamiltonian(num_qubits)
     exact_energy, exact_state = exact_ground_state(hamiltonian)
@@ -137,7 +148,8 @@ def run_vqe(num_qubits, depth, iterations, learning_rate, seed, print_every):
 
     print(f"N={num_qubits}, D={depth}, parameters={len(parameters)}")
     print(f"Exact ground-state energy: {exact_energy:.12f}")
-    print("iteration          energy          error       max|gradient|")
+    print("iteration          energy          error       max|gradient|              Time(s)")
+    t = time()
 
     for iteration in range(iterations):
         current_energy = energy(circuit, parameters, values, hamiltonian)
@@ -146,11 +158,14 @@ def run_vqe(num_qubits, depth, iterations, learning_rate, seed, print_every):
         )
 
         if iteration % print_every == 0 or iteration == iterations - 1:
+            t2 = time()
             print(
                 f"{iteration:9d}  {current_energy: .12f}  "
                 f"{current_energy - exact_energy: .3e}  "
-                f"{np.max(np.abs(gradient)): .3e}"
+                f"{np.max(np.abs(gradient)): .3e} "
+                f"\t{t2 - t}"
             )
+            t = t2
 
         # The complete optimization rule: fixed-step steepest descent.
         values = values - learning_rate * gradient
@@ -170,7 +185,7 @@ def run_vqe(num_qubits, depth, iterations, learning_rate, seed, print_every):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--qubits", type=int, default=4)
+    parser.add_argument("--qubits", type=int, default=16)
     parser.add_argument("--depth", type=int, default=1)
     parser.add_argument("--iterations", type=int, default=300)
     parser.add_argument("--learning-rate", type=float, default=0.1)

@@ -1,11 +1,12 @@
 from source.TDD_Q import squeezeTN, squeezeTN_ultra, TNtoCotInput, generate_close_indices, cir_2_tn_lbl, \
     get_real_qubit_num, add_inputs, add_outputs
-from source.utils import FileOutputHandler, PrintOutputHandler, HybridOutputHandler
+from source.utils import FileOutputHandler, PrintOutputHandler, HybridOutputHandler, OutputHandler
 from source.TN import Index, Tensor, TensorNetwork, contTensor
 from source.IndexOrder import calculate_order, INDEX_ORDER_DEFAULT
 import numpy as np
 
 global handler
+global ctdd_has_init
 
 
 def get_cotengra_configuration():
@@ -391,20 +392,28 @@ def contract_with_FTDD(path, tns, indices, n, N=12):
 
     memory_no_init = get_total_memory_used_kb()
 
-    # cTDD Table parameters
-    load_factor = 1
-    alpha = 2
-    N = 12
+    global ctdd_has_init
+    if ctdd_has_init is None or not ctdd_has_init:
 
-    N_max = min(alpha * n, N)
+        # cTDD Table parameters
+        load_factor = 1
+        alpha = 2
+        N = 20
 
-    NBUCKET = 2 ** N_max
-    INITIAL_GC_LIMIT = int(load_factor * NBUCKET)
-    INITIAL_GC_LUR = 0.9
-    CCT_NBUCKET = ACT_NBUCKET = 2 ** (N_max - 1) - 1
-    uniqTabConfig = [INITIAL_GC_LIMIT, INITIAL_GC_LUR, NBUCKET, ACT_NBUCKET, CCT_NBUCKET]
+        N_max = min(alpha * n, N)
 
-    cTDD.Ini_TDD(indices, uniqTabConfig, False)
+        N_max = N
+
+        NBUCKET = 2 ** N_max
+        INITIAL_GC_LIMIT = int(load_factor * NBUCKET)
+        INITIAL_GC_LUR = 0.9
+        CCT_NBUCKET = ACT_NBUCKET = 2 ** (N_max - 1) - 1
+        uniqTabConfig = [INITIAL_GC_LIMIT, INITIAL_GC_LUR, NBUCKET, ACT_NBUCKET, CCT_NBUCKET]
+
+        cTDD.Ini_TDD(indices, uniqTabConfig, False)
+
+        print("init")
+        ctdd_has_init = True
 
     matrix = None
 
@@ -457,7 +466,7 @@ def contract_with_FTDD(path, tns, indices, n, N=12):
 
 def simulate(cir, is_input_closed=True, is_output_closed=True, use_tetris=False, use_slicing=False,
              contraction_method='seq', n_indices=1, slicing_method="max", backend="PyTDD", handler_name="hybrid",
-             index_order_method=INDEX_ORDER_DEFAULT):
+             index_order_method="path"):
     """
         romOlivo: This method was added to simplify the simulation process. It will encapsulate all the process
         after the circuit is read as a QuantumCircuit until you get the result of all the contraction.
@@ -484,6 +493,8 @@ def simulate(cir, is_input_closed=True, is_output_closed=True, use_tetris=False,
         handler = FileOutputHandler(backend, circuit=cir, cont_method=contraction_method, index_order=index_order_method)
     elif handler_name == "hybrid":
         handler = HybridOutputHandler(backend, circuit=cir, cont_method=contraction_method, index_order=index_order_method)
+    elif handler_name == "none":
+        handler = OutputHandler(backend, circuit=cir, cont_method=contraction_method, index_order=index_order_method)
 
     # Read and prepare the circuit
     tn, all_indices_lbl, depth = cir_2_tn_lbl(cir)
@@ -557,3 +568,7 @@ class SlicedTensorNetwork:
             for it in all_tensors_list:
                 self.tensors_to_slice.append(it)
         return self.tensors_to_slice
+
+
+ctdd_has_init = False
+
