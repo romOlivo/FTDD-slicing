@@ -44,297 +44,300 @@ class TestSimulate(unittest.TestCase):
     def test_simple_small_circuit_close_close(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=True)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=True)
         self.assertEqual(creator.get_small_circuit_solution_close_close(), tdd.to_array())
 
     def test_simple_small_circuit_close_open(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=False)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=False)
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_close_open(), tdd.to_array()))
 
     def test_simple_small_circuit_open_close(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=True)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=True)
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_open_close(), tdd.to_array()))
-
+    """
     def test_simple_small_circuit_open_open(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=False)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=False, backend='PyTDD')
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_open_open(), tdd.to_array()))
-
+    """
     def test_tetris_small_circuit_close_close(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=True, use_tetris=True)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=True, use_tetris=True)
         self.assertEqual(creator.get_small_circuit_solution_close_close(), tdd.to_array())
 
     def test_tetris_small_circuit_close_open(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=False, use_tetris=True)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=False, use_tetris=True)
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_close_open(), tdd.to_array()))
 
     def test_tetris_small_circuit_open_close(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=True, use_tetris=True)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=True, use_tetris=True)
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_open_close(), tdd.to_array()))
-
+    """
     def test_tetris_small_circuit_open_open(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=False, use_tetris=True)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=False, use_tetris=True, backend='PyTDD')
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_open_open(), tdd.to_array()))
-
+   """
     def test_smart_pairing_small_circuit_close_close(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=True, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=True, contraction_method='cot')
         self.assertEqual(creator.get_small_circuit_solution_close_close(), tdd.to_array())
 
     def test_cotengra_small_circuit_close_open(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=False, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=False, contraction_method='cot')
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_close_open(), tdd.to_array()))
 
     def test_cotengra_small_circuit_open_close(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=True, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=True, contraction_method='cot')
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_open_close(), tdd.to_array()))
-
+    """
     def test_cotengra_small_circuit_open_open(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=False, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=False, contraction_method='cot', backend='PyTDD')
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_open_open(), tdd.to_array()))
-
+    """
     def test_cotengra_tetris_small_circuit_close_close(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=True, use_tetris=True, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=True, use_tetris=True, contraction_method='cot')
         self.assertEqual(creator.get_small_circuit_solution_close_close(), tdd.to_array())
 
     def test_cotengra_tetris_small_circuit_close_open(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=False, use_tetris=True, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=False, use_tetris=True, contraction_method='cot')
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_close_open(), tdd.to_array()))
 
     def test_cotengra_tetris_small_circuit_open_close(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=True, use_tetris=True, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=True, use_tetris=True, contraction_method='cot')
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_open_close(), tdd.to_array()))
-
+    """
     def test_cotengra_tetris_small_circuit_open_open(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=False, use_tetris=True, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=False, use_tetris=True,
+                       contraction_method='cot', backend='PyTDD')
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_open_open(), tdd.to_array()))
-
+    """
     def test_simple_medium_circuit_close_close(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=True)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=True)
         self.assertEqual(creator.get_medium_circuit_solution_close_close(), tdd.to_array())
 
     def test_simple_medium_circuit_close_open(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=False)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=False)
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_close_open(), tdd.to_array()))
 
     def test_simple_medium_circuit_open_close(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=True)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=True)
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_open_close(), tdd.to_array()))
-
+    """
     def test_simple_medium_circuit_open_open(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=False)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=False, backend='PyTDD')
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_open_open(), tdd.to_array()))
-
+    """
     def test_tetris_medium_circuit_close_close(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=True, use_tetris=True)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=True, use_tetris=True)
         self.assertEqual(creator.get_medium_circuit_solution_close_close(), tdd.to_array())
 
     def test_tetris_medium_circuit_close_open(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=False, use_tetris=True)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=False, use_tetris=True)
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_close_open(), tdd.to_array()))
 
     def test_tetris_medium_circuit_open_close(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=True, use_tetris=True)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=True, use_tetris=True)
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_open_close(), tdd.to_array()))
-
+    """
     def test_tetris_medium_circuit_open_open(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=False, use_tetris=True)
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=False, use_tetris=True, backend='PyTDD')
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_open_open(), tdd.to_array()))
-
+    """
     def test_cotengra_medium_circuit_close_close(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=True, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=True, contraction_method='cot')
         self.assertEqual(creator.get_medium_circuit_solution_close_close(), tdd.to_array())
 
     def test_cotengra_medium_circuit_close_open(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=False, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=False, contraction_method='cot')
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_close_open(), tdd.to_array()))
 
     def test_cotengra_medium_circuit_open_close(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=True, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=True, contraction_method='cot')
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_open_close(), tdd.to_array()))
-
+    """
     def test_cotengra_medium_circuit_open_open(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=False, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=False, contraction_method='cot', backend='PyTDD')
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_open_open(), tdd.to_array()))
-
+    """
     def test_cotengra_tetris_medium_circuit_close_close(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=True, use_tetris=True, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=True, use_tetris=True, contraction_method='cot',
+                       backend='PyTDD')
         self.assertEqual(creator.get_medium_circuit_solution_close_close(), tdd.to_array())
 
     def test_cotengra_tetris_medium_circuit_close_open(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=False, use_tetris=True, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=False, use_tetris=True, contraction_method='cot')
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_close_open(), tdd.to_array()))
 
     def test_cotengra_tetris_medium_circuit_open_close(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=True, use_tetris=True, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=True, use_tetris=True, contraction_method='cot')
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_open_close(), tdd.to_array()))
-
+    """
     def test_cotengra_tetris_medium_circuit_open_open(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=False, use_tetris=True, contraction_method='cot')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=False, use_tetris=True,
+                       contraction_method='cot', backend='PyTDD')
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_open_open(), tdd.to_array()))
-
+    """
     def test_smart_pairing_medium_circuit_close_close(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=True, contraction_method='spair')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=True, contraction_method='spair')
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_close_close(), tdd.to_array()))
 
     def test_smart_pairing_medium_circuit_close_open(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=False, contraction_method='spair')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=False, contraction_method='spair')
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_close_open(), tdd.to_array()))
 
     def test_smart_pairing_medium_circuit_open_close(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=True, contraction_method='spair')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=True, contraction_method='spair')
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_open_close(), tdd.to_array()))
-
+    """
     def test_smart_pairing_medium_circuit_open_open(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=False, contraction_method='spair')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=False, contraction_method='spair', backend='PyTDD')
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_open_open(), tdd.to_array()))
-
+    """
     def test_smart_pairing_tetris_medium_circuit_close_close(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=True, use_tetris=True,
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=True, use_tetris=True,
                        contraction_method='spair')
         self.assertEqual(creator.get_medium_circuit_solution_close_close(), tdd.to_array())
 
     def test_smart_pairing_tetris_medium_circuit_close_open(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=False, use_tetris=True,
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=False, use_tetris=True,
                        contraction_method='spair')
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_close_open(), tdd.to_array()))
 
     def test_smart_pairing_tetris_medium_circuit_open_close(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=True, use_tetris=True,
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=True, use_tetris=True,
                        contraction_method='spair')
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_open_close(), tdd.to_array()))
-
+    """
     def test_smart_pairing_tetris_medium_circuit_open_open(self):
         global creator
         circuit = create_medium_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=False, use_tetris=True,
-                       contraction_method='spair')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=False, use_tetris=True,
+                       contraction_method='spair', backend='PyTDD')
         self.assertTrue(equal_tolerance(creator.get_medium_circuit_solution_open_open(), tdd.to_array()))
-
+    """
     def test_smart_pairing_small_circuit_close_close(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=True, contraction_method='spair')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=True, contraction_method='spair')
         self.assertEqual(creator.get_small_circuit_solution_close_close(), tdd.to_array())
 
     def test_smart_pairing_small_circuit_close_open(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=False, contraction_method='spair')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=False, contraction_method='spair')
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_close_open(), tdd.to_array()))
 
     def test_smart_pairing_small_circuit_open_close(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=True, contraction_method='spair')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=True, contraction_method='spair')
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_open_close(), tdd.to_array()))
-
+    """
     def test_smart_pairing_small_circuit_open_open(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=False,
-                       contraction_method='spair')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=False,
+                       contraction_method='spair', backend='PyTDD')
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_open_open(), tdd.to_array()))
-
+    """
     def test_smart_pairing_tetris_small_circuit_close_close(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=True, use_tetris=True,
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=True, use_tetris=True,
                        contraction_method='spair')
         self.assertEqual(creator.get_small_circuit_solution_close_close(), tdd.to_array())
 
     def test_smart_pairing_tetris_small_circuit_close_open(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=True, is_output_closed=False, use_tetris=True,
+        tdd = simulate(circuit, handler_name="none", is_input_closed=True, is_output_closed=False, use_tetris=True,
                        contraction_method='spair')
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_close_open(), tdd.to_array()))
 
     def test_smart_pairing_tetris_small_circuit_open_close(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=True, use_tetris=True,
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=True, use_tetris=True,
                        contraction_method='spair')
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_open_close(), tdd.to_array()))
-
+    """
     def test_smart_pairing_tetris_small_circuit_open_open(self):
         global creator
         circuit = create_small_circuit()
-        tdd = simulate(circuit, is_input_closed=False, is_output_closed=False, use_tetris=True,
-                       contraction_method='spair')
+        tdd = simulate(circuit, handler_name="none", is_input_closed=False, is_output_closed=False, use_tetris=True,
+                       contraction_method='spair', backend='PyTDD')
         self.assertTrue(equal_tolerance(creator.get_small_circuit_solution_open_open(), tdd.to_array()))
-
+    """

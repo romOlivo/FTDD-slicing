@@ -282,7 +282,7 @@ class TestFTDD(unittest.TestCase):
                           index_order_method="default")
         self.assertTrue(Statevector(cir), Statevector(result.to_array()))
 
-    def test_statevector_path_big_light_small_simulate(self):
+    def test_statevector_default_big_light_small_simulate(self):
         cir = create_big_light_circuit()
         result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
                           index_order_method="default")
@@ -308,6 +308,92 @@ class TestFTDD(unittest.TestCase):
 
     def test_statevector_path_big_light_small_simulate(self):
         cir = create_big_light_circuit()
+        result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="path")
+        self.assertTrue(Statevector(cir), Statevector(result.to_array()))
+
+    def test_repeated_statevector_default_normal_small_simulate(self):
+        cir = create_small_circuit()
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="default")
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="default")
+        result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="default")
+        self.assertTrue(Statevector(cir), Statevector(result.to_array()))
+
+    def test_repeated_statevector_default_tricky_small_simulate(self):
+        cir = create_tricky_circuit()
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="default")
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="default")
+        result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="default")
+        self.assertTrue(Statevector(cir), Statevector(result.to_array()))
+
+    def test_repeated_statevector_default_medium_small_simulate(self):
+        cir = create_medium_circuit()
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="default")
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="default")
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="default")
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="default")
+        result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="default")
+        self.assertTrue(Statevector(cir), Statevector(result.to_array()))
+
+    def test_repeated_statevector_default_big_light_small_simulate(self):
+        cir = create_big_light_circuit()
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="default")
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="default")
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="default")
+        result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="default")
+        self.assertTrue(Statevector(cir), Statevector(result.to_array()))
+
+    def test_repeated_statevector_path_normal_small_simulate(self):
+        cir = create_small_circuit()
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="path")
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="path")
+        result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="path")
+        self.assertTrue(Statevector(cir), Statevector(result.to_array()))
+
+    def test_repeated_statevector_path_tricky_small_simulate(self):
+        cir = create_tricky_circuit()
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="path")
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="path")
+        result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="path")
+        self.assertTrue(Statevector(cir), Statevector(result.to_array()))
+
+    def test_repeated_statevector_path_medium_small_simulate(self):
+        cir = create_medium_circuit()
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="path")
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="path")
+        result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="path")
+        self.assertTrue(Statevector(cir), Statevector(result.to_array()))
+
+    def test_repeated_statevector_path_big_light_small_simulate(self):
+        cir = create_big_light_circuit()
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="path")
+        simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="path")
         result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
                           index_order_method="path")
         self.assertTrue(Statevector(cir), Statevector(result.to_array()))
