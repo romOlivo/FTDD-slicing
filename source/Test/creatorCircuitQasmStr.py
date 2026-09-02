@@ -241,3 +241,43 @@ class CircuitCreator:
 
     def get_tricky_circuit_solution_close_close(self):
         pass
+
+
+    def create_big_light_circuit(self):
+        """
+            Creates a circuit with a high number of qubits but moderate number of gates for testing purposes
+        """
+        self.init_circuit(16)
+        self.add_gate('x', [0])
+        self.add_gate('x', [1])
+        self.add_gate('x', [2])
+        self.add_gate('h', [3])
+        self.add_gate('x', [4])
+        self.add_gate('h', [5])
+        self.add_gate('x', [6])
+        self.add_gate('x', [7])
+        self.add_gate('x', [8])
+        self.add_gate('h', [9])
+        self.add_gate('x', [10])
+        self.add_gate('x', [11])
+        self.add_gate('h', [12])
+        self.add_gate('x', [13])
+        self.add_gate('x', [14])
+        self.add_gate('h', [15])
+        self.add_gate('cx', [0, 1])
+        self.add_gate('cx', [1, 2])
+        self.add_gate('cx', [2, 3])
+        self.add_gate('cx', [3, 4])
+        self.add_gate('cx', [4, 5])
+        self.add_gate('cx', [5, 6])
+        self.add_gate('cx', [6, 7])
+        self.add_gate('cx', [7, 8])
+        self.add_gate('cx', [8, 9])
+        self.add_gate('cx', [9, 10])
+        self.add_gate('cx', [10, 11])
+        self.add_gate('cx', [11, 12])
+        self.add_gate('cx', [12, 13])
+        self.add_gate('cx', [13, 14])
+        self.add_gate('cx', [14, 15])
+        self.add_gate('cx', [15, 0])
+        return self.circuit
