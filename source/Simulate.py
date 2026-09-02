@@ -374,7 +374,7 @@ def PyTN_2_cTN(tn_lbl):
     return cTN
 
 
-def contract_with_FTDD(path, tns, indices, n, N=12):
+def contract_with_FTDD(path, tns, indices, n, N=12, force_init=True):
     """
         romOlivo: Makes all the contractions using GTN
         Input variables:
@@ -393,12 +393,12 @@ def contract_with_FTDD(path, tns, indices, n, N=12):
     memory_no_init = get_total_memory_used_kb()
 
     global ctdd_has_init
-    if ctdd_has_init is None or not ctdd_has_init:
+    if force_init or ctdd_has_init is None or not ctdd_has_init:
 
         # cTDD Table parameters
         load_factor = 1
         alpha = 2
-        N = 20
+        N = 22
 
         N_max = min(alpha * n, N)
 
@@ -407,12 +407,13 @@ def contract_with_FTDD(path, tns, indices, n, N=12):
         NBUCKET = 2 ** N_max
         INITIAL_GC_LIMIT = int(load_factor * NBUCKET)
         INITIAL_GC_LUR = 0.9
-        CCT_NBUCKET = ACT_NBUCKET = 2 ** (N_max - 1) - 1
+        # CCT_NBUCKET = ACT_NBUCKET = 2 ** (N_max - 1) - 1
+        CCT_NBUCKET = ACT_NBUCKET = 2 ** 15 - 1
         uniqTabConfig = [INITIAL_GC_LIMIT, INITIAL_GC_LUR, NBUCKET, ACT_NBUCKET, CCT_NBUCKET]
 
         cTDD.Ini_TDD(indices, uniqTabConfig, False)
 
-        print("init")
+        # print("init")
         ctdd_has_init = True
 
     matrix = None
@@ -464,9 +465,17 @@ def contract_with_FTDD(path, tns, indices, n, N=12):
     return matrix
 
 
+def clear():
+    import source.cpp.build.cTDD as cTDD
+    print("Clearing....")
+    global ctdd_has_init
+    ctdd_has_init = False
+    cTDD.Clear_TDD()
+
+
 def simulate(cir, is_input_closed=True, is_output_closed=True, use_tetris=False, use_slicing=False,
              contraction_method='seq', n_indices=1, slicing_method="max", backend="PyTDD", handler_name="hybrid",
-             index_order_method="path"):
+             index_order_method="path", force_init=True):
     """
         romOlivo: This method was added to simplify the simulation process. It will encapsulate all the process
         after the circuit is read as a QuantumCircuit until you get the result of all the contraction.
@@ -536,7 +545,7 @@ def simulate(cir, is_input_closed=True, is_output_closed=True, use_tetris=False,
     elif backend == "GTN":
         tdd = contract_with_GTN(path, tns)
     elif backend == "FTDD":
-        tdd = contract_with_FTDD(path, tns, index_order, n)
+        tdd = contract_with_FTDD(path, tns, index_order, n, force_init=force_init)
     handler.end_printing()
     return tdd
 
