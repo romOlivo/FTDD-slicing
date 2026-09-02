@@ -10,6 +10,7 @@
  *   - Showing the new metrics.
  *   - New binding to be able to use tdd addition
  *   - Fixed the GIL problem
+ *   - Fixed memory leak in to_array
  */
 
 #include "cTDD.hpp"
@@ -220,12 +221,12 @@ complexArrayType TDD::to_array() {
     }
     
     // Initialize the data array
-    complexArrayType vec; uint ndim = index_set.size(); std::vector<uint> shape(ndim, 2); 
-    TensorArray* U_ptr = new TensorArray(vec, shape, ndim);
-    U_ptr->vec.resize(std::pow(2,ndim)); U_ptr->vec.setZero();
-
-    tdd_2_np(U_ptr, root, split_pos, std::vector<uint>(ndim, 0), 0, key_repeat_num);
-    return U_ptr->vec;
+    complexArrayType vec; uint ndim = index_set.size(); std::vector<uint> shape(ndim, 2);
+    // @romOlivo: Changed for fixing a memory leak problem
+    TensorArray U_obj(vec, shape, ndim);
+    U_obj.vec.resize(std::pow(2, ndim)); U_obj.vec.setZero();
+    tdd_2_np(&U_obj, root, split_pos, std::vector<uint>(ndim, 0), 0, key_repeat_num);
+    return U_obj.vec;
 }
 
 // @romOlivo: Reworked for fixing the GIL problem
