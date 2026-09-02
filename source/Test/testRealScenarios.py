@@ -215,4 +215,91 @@ class TestFTDD(unittest.TestCase):
                           index_order_method="path", use_tetris=True, contraction_method="k-ops")
         self.assertTrue(Statevector(circuit), Statevector(result.to_array()))
 
+    def test_equivalence_ftdd_rep1_nfi_close_open_t_op_pko_statevector_vqe16(self):
+        path = "./Benchmarks/Verification/vqe_1dhm_16.qasm"
+        circuit = QuantumCircuit.from_qasm_file(path)
+        simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=True)
+        result = simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=False)
+        self.assertTrue(Statevector(circuit), Statevector(result.to_array()))
+
+    def test_equivalence_ftdd_rep2_nfi_close_open_t_op_pko_statevector_vqe16(self):
+        path = "./Benchmarks/Verification/vqe_1dhm_16.qasm"
+        circuit = QuantumCircuit.from_qasm_file(path)
+        simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=True)
+        N = 1
+        for i in range(N):
+            simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                     index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=False)
+        result = simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=False)
+        self.assertTrue(Statevector(circuit), Statevector(result.to_array()))
+
+    def test_equivalence_ftdd_rep3_nfi_close_open_t_op_pko_statevector_vqe16(self):
+        path = "./Benchmarks/Verification/vqe_1dhm_16.qasm"
+        circuit = QuantumCircuit.from_qasm_file(path)
+        simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=True)
+        N = 2
+        for i in range(N):
+            simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                     index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=False)
+        result = simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=False)
+        self.assertTrue(Statevector(circuit), Statevector(result.to_array()))
+
+    def test_equivalence_ftdd_rep4_nfi_close_open_t_op_pko_statevector_vqe16(self):
+        path = "./Benchmarks/Verification/vqe_1dhm_16.qasm"
+        circuit = QuantumCircuit.from_qasm_file(path)
+        simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=True)
+        N = 3
+        for i in range(N):
+            simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                     index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=False)
+        result = simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=False)
+        self.assertTrue(Statevector(circuit), Statevector(result.to_array()))
+
+    def test_equivalence_ftdd_rep5_nfi_close_open_t_op_pko_statevector_vqe16(self):
+        path = "./Benchmarks/Verification/vqe_1dhm_16.qasm"
+        circuit = QuantumCircuit.from_qasm_file(path)
+        simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=True)
+        N = 4
+        for i in range(N):
+            simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                     index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=False)
+        result = simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=False)
+        self.assertTrue(Statevector(circuit), Statevector(result.to_array()))
+
+    def test_equivalence_ftdd_rep6_nfi_close_open_t_op_pko_statevector_vqe16(self):
+        path = "./Benchmarks/Verification/vqe_1dhm_16.qasm"
+        circuit = QuantumCircuit.from_qasm_file(path)
+        simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=True)
+        N = 5
+        for i in range(N):
+            simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                     index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=False)
+        result = simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=False)
+        self.assertTrue(Statevector(circuit), Statevector(result.to_array()))
+
+    def test_equivalence_ftdd_rep7_nfi_close_open_t_op_pko_statevector_vqe16(self):
+        path = "./Benchmarks/Verification/vqe_1dhm_16.qasm"
+        circuit = QuantumCircuit.from_qasm_file(path)
+        simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                 index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=True)
+        N = 6
+        for i in range(N):
+            simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                     index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=False)
+        result = simulate(circuit, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
+                          index_order_method="path", use_tetris=True, contraction_method="k-ops", force_init=False)
+        self.assertTrue(Statevector(circuit), Statevector(result.to_array()))
+
 
