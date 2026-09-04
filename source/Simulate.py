@@ -580,4 +580,5 @@ class SlicedTensorNetwork:
 
 
 ctdd_has_init = False
+handler = OutputHandler(None, circuit=None, cont_method=None, index_order=None)
 
