@@ -69,9 +69,9 @@ public:
     std::size_t hash(const Edge& edge1, const Edge& edge2, const std::complex<dataType>& ratio) {
         hashType hash_value = fnv_offset_basis;
 
-        std::tuple<epiKeyValue, epiKeyValue> ratio_key = get_int_key(ratio); // romOlivo Change to general
+        std::tuple<epiKeyValue, epiKeyValue> ratio_key = get_int_key(ratio); // romOlivo Change to general epi
         const unsigned char* bytes = reinterpret_cast<const unsigned char*>(&ratio_key);
-        for (std::size_t i = 0; i < sizeof(std::tuple<int, int>); i++) {
+        for (std::size_t i = 0; i < sizeof(ratio_key); i++) {                // romOlivo Change to general epi
             hash_value = (hash_value ^ static_cast<hashType>(bytes[i])) * fnv_prime;
         }
 

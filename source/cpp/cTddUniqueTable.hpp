@@ -162,7 +162,7 @@ public:
             // hash the out weights
             std::tuple<epiKeyValue, epiKeyValue> weight = get_int_key(edge.weight); // romOlivo Change to general
             const unsigned char* bytes = reinterpret_cast<const unsigned char*>(&weight);
-            for (std::size_t i = 0; i < sizeof(std::tuple<int, int>); i++) {
+            for (std::size_t i = 0; i < sizeof(weight); i++) {                      // romOlivo Change to general
                 hash = hash ^ static_cast<hashType>(bytes[i]);
                 hash = hash * fnv_prime;
             }

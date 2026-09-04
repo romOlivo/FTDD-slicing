@@ -9,7 +9,7 @@
  * Modified by Vicente Lopez (voliva@uji.es). Modifications will be marked with @voliva-esp.
  *   - Increased epi value for more precision
  *   - Type generalization in get_int_key for allowing smaller epi
- *
+ *   - Hash fixing for new epi-related values
  */
 
 #ifndef CTDD_HPP
@@ -26,12 +26,14 @@
 #include <cmath>
 #include <limits>
 #include <complex>
+#include <cstdint>
+#include <tuple>
 
 #include <vector>
 #include <set>
 #include <map>
-#include <unordered_map>
 #include <algorithm>
+#include <unordered_map>
 #include <eigen3/Eigen/Dense>
 
 #include <graphviz/gvc.h>
@@ -46,10 +48,10 @@ constexpr auto byref = py::return_value_policy::reference_internal;
 
 typedef double dataType;
 typedef int8_t keyType;
-typedef int64_t epiKeyValue;
+typedef int64_t epiKeyValue;                 // voliva-esp Added for generalizing epi-related values
 typedef uint16_t refCntType;
 typedef Eigen::VectorXcd complexArrayType;
-typedef std::uint32_t hashType;
+typedef std::uint64_t hashType;              // voliva-esp Changed to fit the new epiKey value
 
 
 /*
@@ -57,8 +59,8 @@ typedef std::uint32_t hashType;
 */
 
 // 32-bit FNV hash parameters
-const hashType fnv_prime = 0x01000193;
-const hashType fnv_offset_basis = 0x811c9dc5;
+const hashType fnv_prime = 0x100000001b3ULL;                 // voliva-esp Changed to fit the new epiKey value
+const hashType fnv_offset_basis = 0xcbf29ce484222325ULL;     // voliva-esp Changed to fit the new epiKey value
 
 dataType epi = 0.00000001;    // @voliva-esp Increased for more precision
 dataType epi_inv = 1 / epi;
