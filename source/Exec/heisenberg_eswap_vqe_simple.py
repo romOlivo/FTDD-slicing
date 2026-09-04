@@ -82,14 +82,15 @@ def make_heisenberg_hamiltonian(num_qubits, coupling=1.0):
     return SparsePauliOp.from_sparse_list(terms, num_qubits=num_qubits)
 
 
-def statevector(circuit, parameters, values, use_tdd=False):
+def statevector(circuit, parameters, values, use_tdd=True):
     """Evaluate the parameterized circuit and return its state vector."""
     parameter_map = dict(zip(parameters, values))
     bound_circuit = circuit.assign_parameters(parameter_map)
     result = None
     if use_tdd:
         tdd = simulate(bound_circuit, is_input_closed=True, is_output_closed=False, handler_name="none",
-                       backend="FTDD", contraction_method="seq", use_tetris=True, index_order_method="path")
+                       backend="FTDD", contraction_method="k-ops", use_tetris=True, index_order_method="default",
+                       force_init=False)
         result = Statevector(tdd.to_array())
     else:
         result = Statevector(bound_circuit)
@@ -185,7 +186,7 @@ def run_vqe(num_qubits, depth, iterations, learning_rate, seed, print_every):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--qubits", type=int, default=16)
+    parser.add_argument("--qubits", type=int, default=18)
     parser.add_argument("--depth", type=int, default=1)
     parser.add_argument("--iterations", type=int, default=300)
     parser.add_argument("--learning-rate", type=float, default=0.1)
