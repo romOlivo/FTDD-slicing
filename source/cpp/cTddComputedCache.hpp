@@ -11,6 +11,7 @@
  *   - Compute table checks for overwritten results
  *   - ContComputedCache now reserves memory for copying indices
  *   - AddComputedCache now can find equivalent operations
+ *   - Type generalization in get_int_key for allowing smaller epi
  */
 
 
@@ -68,7 +69,7 @@ public:
     std::size_t hash(const Edge& edge1, const Edge& edge2, const std::complex<dataType>& ratio) {
         hashType hash_value = fnv_offset_basis;
 
-        std::tuple<int, int> ratio_key = get_int_key(ratio);
+        std::tuple<epiKeyValue, epiKeyValue> ratio_key = get_int_key(ratio); // romOlivo Change to general
         const unsigned char* bytes = reinterpret_cast<const unsigned char*>(&ratio_key);
         for (std::size_t i = 0; i < sizeof(std::tuple<int, int>); i++) {
             hash_value = (hash_value ^ static_cast<hashType>(bytes[i])) * fnv_prime;

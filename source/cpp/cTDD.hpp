@@ -5,6 +5,11 @@
  * 
  * Copyright (c) 2024 Qirui Zhang
  * All rights reserved.
+ *
+ * Modified by Vicente Lopez (voliva@uji.es). Modifications will be marked with @voliva-esp.
+ *   - Increased epi value for more precision
+ *   - Type generalization in get_int_key for allowing smaller epi
+ *
  */
 
 #ifndef CTDD_HPP
@@ -41,6 +46,7 @@ constexpr auto byref = py::return_value_policy::reference_internal;
 
 typedef double dataType;
 typedef int8_t keyType;
+typedef int64_t epiKeyValue;
 typedef uint16_t refCntType;
 typedef Eigen::VectorXcd complexArrayType;
 typedef std::uint32_t hashType;
@@ -54,7 +60,7 @@ typedef std::uint32_t hashType;
 const hashType fnv_prime = 0x01000193;
 const hashType fnv_offset_basis = 0x811c9dc5;
 
-dataType epi = 0.000001;
+dataType epi = 0.00000001;    // @voliva-esp Increased for more precision
 dataType epi_inv = 1 / epi;
 
 // two-level quantum system
@@ -361,7 +367,7 @@ int get_gc_runs();
 std::string get_count();
 
 // Scale a weight up to reduce numerical instability
-std::tuple<int, int> get_int_key(const std::complex<dataType>& weight);
+std::tuple<epiKeyValue, epiKeyValue> get_int_key(const std::complex<dataType>& weight); // voliva-esp: Change to general
 
 // Set global_index_order with all_indexs
 void set_index_order(py::list var_order, bool debug);

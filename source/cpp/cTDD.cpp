@@ -11,6 +11,7 @@
  *   - New binding to be able to use tdd addition
  *   - Fixed the GIL problem
  *   - Fixed memory leak in to_array
+ *   - Type generalization in get_int_key for allowing smaller epi
  */
 
 #include "cTDD.hpp"
@@ -345,9 +346,10 @@ std::string get_count() {
 }
 
 // Scale a weight up to reduce numerical instability
-std::tuple<int, int> get_int_key(const std::complex<dataType>& weight) {
-    int real_part = round(weight.real() * epi_inv);
-    int imag_part = round(weight.imag() * epi_inv);
+// @romOlivo Changed the type for allowing smaller epis
+std::tuple<epiKeyValue, epiKeyValue> get_int_key(const std::complex<dataType>& weight) {
+    epiKeyValue real_part = round(weight.real() * epi_inv);
+    epiKeyValue imag_part = round(weight.imag() * epi_inv);
     return std::make_tuple(real_part, imag_part);
 }
 
@@ -460,7 +462,7 @@ Edge normalize(const keyType& x, const std::vector<Edge>& the_successors) {
     for (uint k = 0; k < succ_num; k++) {
         edges[k].weight /= weig_max;
         // Check if any of the successor has zero weight
-        if (get_int_key(edges[k].weight) == std::tuple<int, int>(0, 0)) {
+        if (get_int_key(edges[k].weight) == std::tuple<epiKeyValue, epiKeyValue>(0, 0)) { // romOlivo Change to general
             edges[k].node = node_n1;
             edges[k].weight = 0;
         }
@@ -606,7 +608,8 @@ Edge add(const Edge& edge1, const Edge& edge2) {
     }
     if (edge1.node == edge2.node) { // two operands are the same
         std::complex<dataType> weig = edge1.weight + edge2.weight;
-        if (get_int_key(weig) == std::tuple<int, int>(0, 0)) { // result is 0
+        // romOlivo Change to general
+        if (get_int_key(weig) == std::tuple<epiKeyValue, epiKeyValue>(0, 0)) { // result is 0
             res = Edge(node_n1);
             res.weight = 0;
             return res;

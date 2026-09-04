@@ -9,6 +9,7 @@
  * Modified by Vicente Lopez (voliva@uji.es). Modifications will be marked with @romOlivo.
  *   - Using 'available' nodes when it is possible.
  *   - Implemented 'get_size_table' for more info about UniqueTable
+ *   - Type generalization in get_int_key for allowing smaller epi
  */
 
 
@@ -159,7 +160,7 @@ public:
         
         for (const auto& edge : edges) {
             // hash the out weights
-            std::tuple<int, int> weight = get_int_key(edge.weight);
+            std::tuple<epiKeyValue, epiKeyValue> weight = get_int_key(edge.weight); // romOlivo Change to general
             const unsigned char* bytes = reinterpret_cast<const unsigned char*>(&weight);
             for (std::size_t i = 0; i < sizeof(std::tuple<int, int>); i++) {
                 hash = hash ^ static_cast<hashType>(bytes[i]);
