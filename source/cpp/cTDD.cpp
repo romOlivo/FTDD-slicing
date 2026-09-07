@@ -117,19 +117,71 @@ bool Edge::operator==(const Edge& other) const {
     return ((node == other.node) && (get_int_key(weight) == get_int_key(other.weight)));
 }
 
-std::complex<dataType> Edge::get_amplitude_recur(std::vector<int>& index_values) {
-    if (index_values.size() == 0) {
+// cTDD.cpp
+
+// @romOlivo: Changed to fix de GIL problem and to allow different index ordering
+std::complex<dataType> TDD::get_amplitude(std::vector<int> index_values) {
+    if (index_values.size() != index_set.size()) {
+        throw std::invalid_argument("The number of values does not match the number of indices in index_set.");
+    }
+
+    // Find the maximum 'key' registered in this TDD
+    keyType max_key = -1;
+    for (const auto& pair : key_2_index) {
+        if (pair.first > max_key) {
+            max_key = pair.first;
+        }
+    }
+
+    // Create a vector where each index position corresponds to 'node->key'
+    std::vector<int> key_values(max_key + 1, 0);
+
+    // Map each input value to its corresponding 'key' by associating it with the qubit index
+    for (size_t i = 0; i < index_set.size(); ++i) {
+        const std::string& idx_name = index_set[i].key;
+        if (index_2_key.find(idx_name) != index_2_key.end()) {
+            keyType key = index_2_key.at(idx_name);
+            if (key >= 0 && key <= max_key) {
+                // Extract the actual qubit index from the variable name (e.g., "x0" -> 0, "x1_0" -> 1)
+                size_t q_idx = i;
+                int parsed_num = 0;
+                bool has_num = false;
+                for (char c : idx_name) {
+                    if (std::isdigit(c)) {
+                        parsed_num = parsed_num * 10 + (c - '0');
+                        has_num = true;
+                    } else if (has_num) {
+                        break;
+                    }
+                }
+                if (has_num && static_cast<size_t>(parsed_num) < index_values.size()) {
+                    q_idx = parsed_num;
+                }
+
+                key_values[key] = index_values[q_idx];
+            }
+        }
+    }
+
+    // Execute recursive traversal passing the key-mapped values
+    return root.get_amplitude_recur(key_values);
+}
+
+// @romOlivo: Changed to allow different index ordering
+std::complex<dataType> Edge::get_amplitude_recur(std::vector<int>& key_values) {
+    // Base case: terminal or null node reached
+    if (node == node_n1 || node == nullptr) {
         return weight;
     }
 
-    if (index_values.size() != (((std::size_t)node->key) + 1)) {
-        index_values.erase(index_values.begin());
-        return get_amplitude_recur(index_values);
-    } else {
-        Edge temp_edge = Slicing(*this, node->key, index_values[0]);
-        index_values.erase(index_values.begin());
-        return weight * (temp_edge.get_amplitude_recur(index_values));
-    }
+    // Get the bit corresponding to the current node's key
+    int bit_value = key_values[node->key];
+
+    // Slice the current node's key with its corresponding bit value
+    Edge temp_edge = Slicing(*this, node->key, bit_value);
+
+    // Recurse and multiply by current edge weight
+    return weight * temp_edge.get_amplitude_recur(key_values);
 }
 
 void Edge::get_measure_prob_recur() {
@@ -228,11 +280,6 @@ complexArrayType TDD::to_array() {
     U_obj.vec.resize(std::pow(2, ndim)); U_obj.vec.setZero();
     tdd_2_np(&U_obj, root, split_pos, std::vector<uint>(ndim, 0), 0, key_repeat_num);
     return U_obj.vec;
-}
-
-// @romOlivo: Reworked for fixing the GIL problem
-std::complex<dataType> TDD::get_amplitude(std::vector<int> index_values) {
-    return root.get_amplitude_recur(index_values);
 }
 
 void TDD::get_measure_prob() {

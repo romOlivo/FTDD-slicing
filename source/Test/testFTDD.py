@@ -240,7 +240,7 @@ class TestFTDD(unittest.TestCase):
         path = ((0, 1), (0, 1), (0, 1), (0, 1), (0, 1))
         result = make_sim(cir, uniqTabConfig, path, adapt=False, index_order_method="path")
         np.testing.assert_allclose(Statevector(cir), Statevector(get_statevector(result, cir.num_qubits)), atol=1e-8)
-    """
+
     def test_statevector_path_tricky_small(self):
         cir = create_tricky_circuit()
         n_bucket = 32000
@@ -264,7 +264,7 @@ class TestFTDD(unittest.TestCase):
         path = [(0, 1) for _ in range(cir.size() + 2)]
         result = make_sim(cir, uniqTabConfig, path, adapt=False, index_order_method="path")
         np.testing.assert_allclose(Statevector(cir), Statevector(get_statevector(result, cir.num_qubits)), atol=1e-8)
-    """
+
     def test_statevector_default_normal_small_simulate(self):
         cir = create_small_circuit()
         result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
@@ -294,7 +294,7 @@ class TestFTDD(unittest.TestCase):
         result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
                           index_order_method="path")
         np.testing.assert_allclose(Statevector(cir), Statevector(get_statevector(result, cir.num_qubits)), atol=1e-8)
-    """
+
     def test_statevector_path_tricky_small_simulate(self):
         cir = create_tricky_circuit()
         result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
@@ -312,7 +312,7 @@ class TestFTDD(unittest.TestCase):
         result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
                           index_order_method="path")
         np.testing.assert_allclose(Statevector(cir), Statevector(get_statevector(result, cir.num_qubits)), atol=1e-8)
-    """
+
     def test_repeated_statevector_default_normal_small_simulate(self):
         cir = create_small_circuit()
         simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
@@ -368,7 +368,7 @@ class TestFTDD(unittest.TestCase):
         result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
                           index_order_method="path")
         np.testing.assert_allclose(Statevector(cir), Statevector(get_statevector(result, cir.num_qubits)), atol=1e-8)
-    """
+
     def test_repeated_statevector_path_tricky_small_simulate(self):
         cir = create_tricky_circuit()
         simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
@@ -378,7 +378,7 @@ class TestFTDD(unittest.TestCase):
         result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
                           index_order_method="path")
         np.testing.assert_allclose(Statevector(cir), Statevector(get_statevector(result, cir.num_qubits)), atol=1e-8)
-    """
+
     def test_repeated_statevector_path_medium_small_simulate(self):
         cir = create_medium_circuit()
         simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
@@ -388,7 +388,7 @@ class TestFTDD(unittest.TestCase):
         result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
                           index_order_method="path")
         np.testing.assert_allclose(Statevector(cir), Statevector(get_statevector(result, cir.num_qubits)), atol=1e-8)
-    """
+
     def test_repeated_statevector_path_big_light_small_simulate(self):
         cir = create_big_light_circuit()
         simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
@@ -398,4 +398,3 @@ class TestFTDD(unittest.TestCase):
         result = simulate(cir, backend="FTDD", is_input_closed=True, is_output_closed=False, handler_name="none",
                           index_order_method="path")
         np.testing.assert_allclose(Statevector(cir), Statevector(get_statevector(result, cir.num_qubits)), atol=1e-8)
-"""
