@@ -578,6 +578,21 @@ class SlicedTensorNetwork:
                 self.tensors_to_slice.append(it)
         return self.tensors_to_slice
 
+# Extract the statevector result given the qiskit.Statevector order
+def get_statevector(tdd, n_qubits):
+    statevector = []
+
+    # For all the computational basis
+    for i in range(2 ** n_qubits):
+        # Extracting the desired order (q_0, q_1, ..., q_n-1)
+        bit_values = [(i >> k) & 1 for k in range(n_qubits)]
+
+        # Get the correct amplitude
+        amplitude = tdd.get_amplitude(bit_values)
+        statevector.append(amplitude)
+
+    return np.asarray(statevector, dtype=np.complex128).flatten()
+
 
 ctdd_has_init = False
 handler = OutputHandler(None, circuit=None, cont_method=None, index_order=None)
