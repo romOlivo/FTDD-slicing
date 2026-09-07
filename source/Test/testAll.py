@@ -7,7 +7,7 @@
 
 from source.Test import testToArray, testAddTdd, testSimpleTNContraction, testSimulate, testSimulateSlicing, \
     testSimulateBackends, testTNtoCotInput, testTNContraction, testSlicingMethods, testContractingMethods, testAddFETDD, \
-    testFTDD, testRealScenarios
+    testFTDD, testRealScenarios, testFidelity
 import unittest
 
 if __name__ == '__main__':
@@ -24,7 +24,7 @@ if __name__ == '__main__':
         testSimulate,
         testSimulateBackends,
         testRealScenarios,
-
+        testFidelity,
 
         # testSlicingMethods,
         # testSimulateSlicing
