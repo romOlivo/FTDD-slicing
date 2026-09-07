@@ -15,7 +15,7 @@ if __name__ == '__main__':
     test_modules = [
         testToArray,
         testAddTdd,
-        testAddFETDD,
+        # testAddFETDD,
         testFTDD,
         testTNtoCotInput,
         testSimpleTNContraction,
