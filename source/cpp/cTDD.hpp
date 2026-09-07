@@ -10,6 +10,7 @@
  *   - Increased epi value for more precision
  *   - Type generalization in get_int_key for allowing smaller epi
  *   - Hash fixing for new epi-related values
+ *   - Changed succs from vector to array for static size
  */
 
 #ifndef CTDD_HPP
@@ -29,6 +30,7 @@
 #include <cstdint>
 #include <tuple>
 
+#include <array>
 #include <vector>
 #include <set>
 #include <map>
@@ -66,7 +68,7 @@ dataType epi = 0.00000001;    // @voliva-esp Increased for more precision
 dataType epi_inv = 1 / epi;
 
 // two-level quantum system
-uint succ_num = 2;
+constexpr std::size_t succ_num = 2;
 
 // the global index order
 std::unordered_map<std::string, int> global_index_order;
@@ -121,32 +123,9 @@ public:
 /*
     Implementation of TDD.Node in C++
 */
+class Node; //@romOlivo Added so Edge could be declared first
+
 class Edge; // Forward declaration of Edge
-
-class Node {
-public:
-    keyType key; // The level of the node (not edge name in Index)
-    refCntType refCnt; // reference count
-    std::vector<Edge> edges;
-    Node* next{}; // pointer to the next node in unique table
-
-    std::vector<dataType> meas_prob;
-
-    Node() {
-        key = -1;
-        refCnt = 0;
-        next = nullptr;
-    }
-    Node(keyType key_) {
-        key = key_;
-        refCnt = 0;
-        next = nullptr;
-    }
-};
-
-// The terminal node (with a value of one) at level -1 
-Node* node_n1 = new Node(-1);
-
 
 /*
     Implementation of Edge in C++
@@ -174,6 +153,30 @@ public:
 
     std::string measure_recur(int split_pos);
 };
+
+class Node {
+public:
+    keyType key; // The level of the node (not edge name in Index)
+    refCntType refCnt; // reference count
+    std::array<Edge, succ_num> edges; //@romOlivo Changed for static array size
+    Node* next{}; // pointer to the next node in unique table
+
+    std::vector<dataType> meas_prob;
+
+    Node() {
+        key = -1;
+        refCnt = 0;
+        next = nullptr;
+    }
+    Node(keyType key_) {
+        key = key_;
+        refCnt = 0;
+        next = nullptr;
+    }
+};
+
+// The terminal node (with a value of one) at level -1 
+Node* node_n1 = new Node(-1);
 
 
 /*
@@ -397,8 +400,8 @@ TDD get_identity_tdd();
 
 // The unique table query
 Node* Find_Or_Add_Unique_table(const keyType& x, const std::vector<Edge>& edges);
-// Normalization
-Edge normalize(const keyType& x, const std::vector<Edge>& the_successors);
+// Normalization //@romOlivo Changed for static array size
+Edge normalize(const keyType& x, const std::array<Edge, succ_num>& the_successors);
 
 
 // The get_tdd() function 

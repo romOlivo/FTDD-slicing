@@ -12,6 +12,7 @@
  *   - Fixed the GIL problem
  *   - Fixed memory leak in to_array
  *   - Type generalization in get_int_key for allowing smaller epi
+ *   - Changed succs from vector to array for static size
  */
 
 #include "cTDD.hpp"
@@ -491,13 +492,13 @@ TDD get_identity_tdd() {
     return tdd;
 }
 
-// Normalization
-Edge normalize(const keyType& x, const std::vector<Edge>& the_successors) {
+// Normalization // @romOlivo Changed for static array size
+Edge normalize(const keyType& x, const std::array<Edge, succ_num>& the_successors) {
     // Check if the two successors are the same, if so, return directly the successor
     if (the_successors[0] == the_successors[1]) { return the_successors[0]; }
 
     // Copy the successors
-    std::vector<Edge> edges = the_successors;
+    std::array<Edge, succ_num> edges = the_successors; // @romOlivo Changed for static array size
 
     // Calculate absolute weights and find the max of two weights. Here we are taking the left weight if they equal, same as Python
     dataType weigs_abs0 = std::round(std::abs(edges[0].weight) * epi_inv);     
@@ -577,7 +578,7 @@ Edge np_2_tdd(TensorArray* U, const std::vector<uint>& slice, const std::vector<
     }
 
     // Recursion
-    std::vector<Edge> the_successors(succ_num);
+    std::array<Edge, succ_num> the_successors; // @romOlivo Changed for static array size
     for (uint k = 0; k < slice_split.size(); k++) {
         Edge res = np_2_tdd(U, slice_split[k], sliced_split, order_copy);
         the_successors[k] = res;
@@ -671,8 +672,8 @@ Edge add(const Edge& edge1, const Edge& edge2) {
     Edge find_add = add_computed_table.find(edge1, edge2);
     if (find_add.node != nullptr) { return find_add; }
 
-    // Recursive addition
-    std::vector<Edge> the_successors(succ_num); keyType x;
+    // Recursive addition // @romOlivo Changed for static array size
+    std::array<Edge, succ_num> the_successors; keyType x;
     if (k1 > k2) {
         x = k1;
         for (uint k = 0; k < succ_num; k++) {
@@ -830,8 +831,8 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
         }
     }
 
-    // Recursive contraction
-    std::vector<Edge> the_successors(succ_num); keyType the_key;
+    // Recursive contraction // @romOlivo Changed for static array size
+    std::array<Edge, succ_num> the_successors; keyType the_key;
     if (cont_order_0[k1+1] < cont_order_1[k2+1]) { // edge1 is now on top of edge2
         the_key = key_2_new_key_0[k1];
         if (the_key != -2) { // if x not in var

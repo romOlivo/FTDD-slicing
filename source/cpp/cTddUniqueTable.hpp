@@ -10,6 +10,7 @@
  *   - Using 'available' nodes when it is possible.
  *   - Implemented 'get_size_table' for more info about UniqueTable
  *   - Type generalization in get_int_key for allowing smaller epi
+ *   - Changed succs from vector to array for static size
  */
 
 
@@ -150,8 +151,9 @@ public:
     /*
         Hash functions
     */
-    // cTDD hash function: FNV-1a 
-    std::size_t hash(const keyType& v, const std::vector<Edge>& edges) {
+    // cTDD hash function: FNV-1a
+    // @romOlivo Changed for static array size
+    std::size_t hash(const keyType& v, const std::array<Edge, succ_num>& edges) {
         hashType hash = fnv_offset_basis;
         
         // hash the integer key
@@ -184,7 +186,8 @@ public:
         Functions for the unique table look up
     */
     // Searches for a node in the hash table with the given key.
-    Node* searchTable(const keyType& v, const std::vector<Edge>& edges, const std::size_t& hashVal) {
+    // @romOlivo Changed for static array size
+    Node* searchTable(const keyType& v, const std::array<Edge, succ_num>& edges, const std::size_t& hashVal) {
         Node* pNode = tables[hashVal];
         while (pNode != nullptr) {
             if ((edges == pNode->edges) && (v == pNode->key)) { // if nodes are equal 
@@ -197,7 +200,8 @@ public:
     }
     
     // lookup a node in the unique table for the appropriate variable; insert it, if it has not been found
-    Node* Find_Or_Add_Unique_table(const keyType& v, const std::vector<Edge>& edges) {
+    // @romOlivo Changed for static array size
+    Node* Find_Or_Add_Unique_table(const keyType& v, const std::array<Edge, succ_num>& edges) {
         ++lookups;
         std::size_t hashVal = hash(v, edges);
 
