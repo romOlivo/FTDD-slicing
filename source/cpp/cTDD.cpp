@@ -11,7 +11,7 @@
  *   - New binding to be able to use tdd addition
  *   - Fixed the GIL problem
  *   - Fixed memory leak in to_array
- *   - Type generalization in get_int_key for allowing smaller epi
+ *   - Changed and type generalization in get_int_key for allowing smaller epi and more stability
  *   - Changed succs from vector to array for static size
  */
 
@@ -394,11 +394,23 @@ std::string get_count() {
 }
 
 // Scale a weight up to reduce numerical instability
-// @romOlivo Changed the type for allowing smaller epis
-std::tuple<epiKeyValue, epiKeyValue> get_int_key(const std::complex<dataType>& weight) {
-    epiKeyValue real_part = round(weight.real() * epi_inv);
-    epiKeyValue imag_part = round(weight.imag() * epi_inv);
-    return std::make_tuple(real_part, imag_part);
+// @romOlivo Changed the type for allowing smaller epis and more stability
+inline std::tuple<epiKeyValue, epiKeyValue> get_int_key(const std::complex<dataType>& w) {
+    dataType r = w.real();
+    dataType i = w.imag();
+
+    // Filter values close to 0
+    if (std::abs(r) < epi) r = 0.0;
+    if (std::abs(i) < epi) i = 0.0;
+
+    epiKeyValue key_r = static_cast<epiKeyValue>(std::round(r * epi_inv));
+    epiKeyValue key_i = static_cast<epiKeyValue>(std::round(i * epi_inv));
+
+    // Normalize values really close to 0
+    if (key_r == 0) key_r = 0;
+    if (key_i == 0) key_i = 0;
+
+    return {key_r, key_i};
 }
 
 // Set global_index_order with all_indexs
