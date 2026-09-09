@@ -97,13 +97,13 @@ def statevector(circuit, parameters, values, use_tdd=True):
     return result
 
 
-def energy(circuit, parameters, values, hamiltonian):
+def energy(circuit, parameters, values, hamiltonian, use_tdd):
     """Return <psi(theta)|H|psi(theta)> exactly."""
-    state = statevector(circuit, parameters, values)
+    state = statevector(circuit, parameters, values, use_tdd)
     return float(state.expectation_value(hamiltonian).real)
 
 
-def parameter_shift_gradient(circuit, parameters, values, hamiltonian):
+def parameter_shift_gradient(circuit, parameters, values, hamiltonian, use_tdd):
     """Calculate every dE/dtheta_i with the parameter-shift rule.
 
     Since eSWAP(theta) = exp(-i theta SWAP/2),
@@ -122,8 +122,8 @@ def parameter_shift_gradient(circuit, parameters, values, hamiltonian):
         plus[i] += shift
         minus[i] -= shift
 
-        energy_plus = energy(circuit, parameters, plus, hamiltonian)
-        energy_minus = energy(circuit, parameters, minus, hamiltonian)
+        energy_plus = energy(circuit, parameters, plus, hamiltonian, use_tdd)
+        energy_minus = energy(circuit, parameters, minus, hamiltonian, use_tdd)
         gradient[i] = (energy_plus - energy_minus) / 2
 
     return gradient
@@ -138,8 +138,10 @@ def exact_ground_state(hamiltonian):
     return float(eigenvalues[0].real), Statevector(eigenvectors[:, 0])
 
 
-def run_vqe(num_qubits, depth, iterations, learning_rate, seed, print_every):
+def run_vqe(num_qubits, depth, iterations, learning_rate, seed,
+            print_every, use_tdd):
     from time import time
+    print(f"Using TDD: {use_tdd}")
     circuit, parameters = make_ansatz(num_qubits, depth)
     hamiltonian = make_heisenberg_hamiltonian(num_qubits)
     exact_energy, exact_state = exact_ground_state(hamiltonian)
@@ -153,9 +155,9 @@ def run_vqe(num_qubits, depth, iterations, learning_rate, seed, print_every):
     t = time()
 
     for iteration in range(iterations):
-        current_energy = energy(circuit, parameters, values, hamiltonian)
+        current_energy = energy(circuit, parameters, values, hamiltonian, use_tdd)
         gradient = parameter_shift_gradient(
-            circuit, parameters, values, hamiltonian
+            circuit, parameters, values, hamiltonian, use_tdd
         )
 
         if iteration % print_every == 0 or iteration == iterations - 1:
@@ -171,7 +173,7 @@ def run_vqe(num_qubits, depth, iterations, learning_rate, seed, print_every):
         # The complete optimization rule: fixed-step steepest descent.
         values = values - learning_rate * gradient
 
-    final_state = statevector(circuit, parameters, values)
+    final_state = statevector(circuit, parameters, values, use_tdd=use_tdd)
     final_energy = float(final_state.expectation_value(hamiltonian).real)
     fidelity = abs(exact_state.inner(final_state)) ** 2
 
@@ -186,12 +188,13 @@ def run_vqe(num_qubits, depth, iterations, learning_rate, seed, print_every):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--qubits", type=int, default=18)
+    parser.add_argument("--qubits", type=int, default=20)
     parser.add_argument("--depth", type=int, default=1)
-    parser.add_argument("--iterations", type=int, default=300)
+    parser.add_argument("--iterations", type=int, default=20)
     parser.add_argument("--learning-rate", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=7)
-    parser.add_argument("--print-every", type=int, default=20)
+    parser.add_argument("--print-every", type=int, default=2)
+    parser.add_argument("--use-tdd", type=bool, default=False)
     args = parser.parse_args()
 
     run_vqe(
@@ -201,6 +204,7 @@ def main():
         learning_rate=args.learning_rate,
         seed=args.seed,
         print_every=args.print_every,
+        use_tdd=args.use_tdd,
     )
 
 
