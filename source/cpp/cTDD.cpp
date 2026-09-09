@@ -2,7 +2,7 @@
  * File: cTDD.cpp
  * Author: Qirui Zhang (qiruizh@umich.edu)
  * Description: C++ backend for FTDD (https://github.com/QiruiZhang/FTDD)
- * 
+ *
  * Copyright (c) 2024 Qirui Zhang
  * All rights reserved.
  *
@@ -11,7 +11,7 @@
  *   - New binding to be able to use tdd addition
  *   - Fixed the GIL problem
  *   - Fixed memory leak in to_array
- *   - Changed and type generalization in get_int_key for allowing smaller epi and more stability
+ *   - Type generalization in get_int_key for allowing smaller epi
  *   - Changed succs from vector to array for static size
  */
 
@@ -65,7 +65,7 @@ PYBIND11_MODULE(cTDD, m) {
     .def("get_amplitude", &TDD::get_amplitude, py::call_guard<py::gil_scoped_release>())
     .def("get_measure_prob", &TDD::get_measure_prob, py::call_guard<py::gil_scoped_release>())
     .def("measure", &TDD::measure, py::call_guard<py::gil_scoped_release>())
-    ;   
+    ;
 
     // Binding Tensor in C++
     py::class_<Tensor>(m, "Tensor")
@@ -73,11 +73,11 @@ PYBIND11_MODULE(cTDD, m) {
     .def("str", &Tensor::str, py::call_guard<py::gil_scoped_release>())
     .def("get_data", &Tensor::get_data, py::call_guard<py::gil_scoped_release>())
     .def("tdd", &Tensor::tdd, py::call_guard<py::gil_scoped_release>())
-    ;   
+    ;
 
     // Binding TensorNetwork in C++
     py::class_<TensorNetwork>(m, "TensorNetwork")
-    .def(py::init<std::string, int>())  
+    .def(py::init<std::string, int>())
     .def("add_tensor", &TensorNetwork::add_tensor, py::call_guard<py::gil_scoped_release>())
     .def("cont_TN", &TensorNetwork::cont_TN, py::call_guard<py::gil_scoped_release>())
     .def("str", &TensorNetwork::str, py::call_guard<py::gil_scoped_release>())
@@ -188,7 +188,7 @@ std::complex<dataType> Edge::get_amplitude_recur(std::vector<int>& key_values) {
 void Edge::get_measure_prob_recur() {
     if (!node->meas_prob.empty()) {
         return;
-    } 
+    }
     if (node->key == -1) {
         node->meas_prob={0.5, 0.5};
         return;
@@ -214,7 +214,7 @@ std::string Edge::measure_recur(int split_pos) {
             res = std::to_string(rand_bit) + temp_res;
             return res;
         }
-        
+
         // Define a distribution to produce integers in the range [0, sum(meas_prob))
         std::uniform_real_distribution<dataType> dist2(0, (node->meas_prob[0] + node->meas_prob[1]));
         dataType rand_float = dist2(gen2);
@@ -225,7 +225,7 @@ std::string Edge::measure_recur(int split_pos) {
         } else {
             Edge temp_edge = Slicing(*this, node->key, 1);
             temp_res = temp_edge.measure_recur(split_pos - 1);
-            res = '1' + temp_res;              
+            res = '1' + temp_res;
         }
     }
     return res;
@@ -249,7 +249,7 @@ complexArrayType TDD::to_array() {
     keyType split_pos = 0;
     std::map<keyType,int> key_repeat_num;
     std::map<std::string,int> var_idx;
-    
+
     // Count the appearance of indices and log in var_idx
     for (const auto& idx : index_set) {
         if (var_idx.find(idx.key) == var_idx.end()) {
@@ -258,11 +258,11 @@ complexArrayType TDD::to_array() {
             var_idx[idx.key]++;
         }
     }
-    
+
     // split_pos is sort of the number of different indices
     std::pair<keyType, std::string> pair =  *std::max_element(key_2_index.begin(), key_2_index.end(), [](const std::pair<keyType, std::string>& p1, const std::pair<keyType, std::string>& p2) {return p1.first < p2.first;});
     split_pos = pair.first;
-    
+
     // Count the appearance of different keys and log in key_repeat_num
     for (keyType k = 0; k <= split_pos; k++) {
         if (key_2_index.find(k) != key_2_index.end()) {
@@ -273,7 +273,7 @@ complexArrayType TDD::to_array() {
             key_repeat_num[k] = 1;
         }
     }
-    
+
     // Initialize the data array
     complexArrayType vec; uint ndim = index_set.size(); std::vector<uint> shape(ndim, 2);
     // @romOlivo: Changed for fixing a memory leak problem
@@ -298,7 +298,7 @@ std::string TDD::measure() {
 }
 
 
-/* 
+/*
     Tensor
 */
 TDD Tensor::tdd() {
@@ -345,9 +345,9 @@ TDD TensorNetwork::cont_TN(const std::vector<std::pair<int, int>>& path, bool de
         }
 
         // Garbage collection, not for the last operation
-        if (i < path.size() - 1) { 
-            uint num_collected = unique_table.garbageCollection(); 
-            if (debug) { std::cout << "Number of remained nodes: " << unique_table.getNodeCount() << ", Number of collected nodes: " << num_collected << ", garbage collection threshold: " << unique_table.getGcLimit() << std::endl << std::endl; }       
+        if (i < path.size() - 1) {
+            uint num_collected = unique_table.garbageCollection();
+            if (debug) { std::cout << "Number of remained nodes: " << unique_table.getNodeCount() << ", Number of collected nodes: " << num_collected << ", garbage collection threshold: " << unique_table.getGcLimit() << std::endl << std::endl; }
         }
 
     }
@@ -394,23 +394,11 @@ std::string get_count() {
 }
 
 // Scale a weight up to reduce numerical instability
-// @romOlivo Changed the type for allowing smaller epis and more stability
-inline std::tuple<epiKeyValue, epiKeyValue> get_int_key(const std::complex<dataType>& w) {
-    dataType r = w.real();
-    dataType i = w.imag();
-
-    // Filter values close to 0
-    if (std::abs(r) < epi) r = 0.0;
-    if (std::abs(i) < epi) i = 0.0;
-
-    epiKeyValue key_r = static_cast<epiKeyValue>(std::round(r * epi_inv));
-    epiKeyValue key_i = static_cast<epiKeyValue>(std::round(i * epi_inv));
-
-    // Normalize values really close to 0
-    if (key_r == 0) key_r = 0;
-    if (key_i == 0) key_i = 0;
-
-    return {key_r, key_i};
+// @romOlivo Changed the type for allowing smaller epis
+std::tuple<epiKeyValue, epiKeyValue> get_int_key(const std::complex<dataType>& weight) {
+    epiKeyValue real_part = round(weight.real() * epi_inv);
+    epiKeyValue imag_part = round(weight.imag() * epi_inv);
+    return std::make_tuple(real_part, imag_part);
 }
 
 // Set global_index_order with all_indexs
@@ -497,7 +485,7 @@ void Clear_TDD() {
 
 
 // Get identity TDD
-TDD get_identity_tdd() {    
+TDD get_identity_tdd() {
     TDD tdd = TDD(Edge(node_n1));
     tdd.index_2_key = {{"-1", -1}};
     tdd.key_2_index = {{-1, "-1"}};
@@ -513,8 +501,8 @@ Edge normalize(const keyType& x, const std::array<Edge, succ_num>& the_successor
     std::array<Edge, succ_num> edges = the_successors; // @romOlivo Changed for static array size
 
     // Calculate absolute weights and find the max of two weights. Here we are taking the left weight if they equal, same as Python
-    dataType weigs_abs0 = std::round(std::abs(edges[0].weight) * epi_inv);     
-    dataType weigs_abs1 = std::round(std::abs(edges[1].weight) * epi_inv); 
+    dataType weigs_abs0 = std::round(std::abs(edges[0].weight) * epi_inv);
+    dataType weigs_abs1 = std::round(std::abs(edges[1].weight) * epi_inv);
     std::complex<dataType> weig_max;
     if (weigs_abs0 >= weigs_abs1) { weig_max = edges[0].weight; } else { weig_max = edges[1].weight; }
 
@@ -535,7 +523,7 @@ Edge normalize(const keyType& x, const std::array<Edge, succ_num>& the_successor
 }
 
 
-// The get_tdd() function 
+// The get_tdd() function
 TDD get_tdd(TensorArray& U, const std::vector<Index>& var) {
     auto pair = get_index_2_key(var);
     std::map<std::string, keyType> idx_2_key = pair.first;
@@ -559,7 +547,7 @@ TDD get_tdd(TensorArray& U, const std::vector<Index>& var) {
 Edge np_2_tdd(TensorArray* U, const std::vector<uint>& slice, const std::vector<bool>& sliced, const std::vector<keyType>& order) {
     // Recursion terminal
     bool allSliced = std::all_of(sliced.begin(), sliced.end(), [](bool x){ return x; });
-    if (allSliced){ 
+    if (allSliced){
         Edge res = Edge(node_n1);
         res.weight = U->at(slice);
         return res;
@@ -609,7 +597,7 @@ void tdd_2_np(TensorArray* U, const Edge& edge, const keyType& split_pos, const 
         // Get the time that current key is repeated in index_set (for hyper-edges)
         uint repeat_num;
         if (key_repeat_num.find(split_pos) == key_repeat_num.end()) { repeat_num = 1; } else { repeat_num = key_repeat_num[split_pos]; }
-        
+
         // Update the start pointer of slice slots to be split
         uint slice_ptr_new = slice_ptr + repeat_num;
 
@@ -714,7 +702,7 @@ Edge add(const Edge& edge1, const Edge& edge2) {
 // TDD contraction
 TDD cont(TDD& tdd1, TDD& tdd2) {
     // Index set pre-processing
-    std::vector<Index> var_cont, var_out1, var_out2; 
+    std::vector<Index> var_cont, var_out1, var_out2;
     for (auto var : tdd1.index_set) { if (std::find(tdd2.index_set.begin(), tdd2.index_set.end(), var) != tdd2.index_set.end()) {var_cont.push_back(var);} } // tdd1 && tdd2
     for (auto var : tdd1.index_set) { if (std::find(var_cont.begin(), var_cont.end(), var) == var_cont.end()) {var_out1.push_back(var);} } // tdd1 / (tdd1 && tdd2)
     for (auto var : tdd2.index_set) { if (std::find(var_cont.begin(), var_cont.end(), var) == var_cont.end()) {var_out2.push_back(var);} } // tdd2 / (tdd1 && tdd2)
@@ -857,7 +845,7 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
                                              key_2_new_key_1, k2 + 1, res);
             res.weight *= w1 * w2;
         } else { // if x in var
-            res = add(contract(Slicing(edge1, k1, 0), edge2, key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1), 
+            res = add(contract(Slicing(edge1, k1, 0), edge2, key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1),
                       contract(Slicing(edge1, k1, 1), edge2, key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1));
             if (k1 + k2 > 3)
                 cont_computed_table.insert(edge1.node, edge2.node, key_2_new_key_0, k1 + 1,
@@ -876,7 +864,7 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
                                              key_2_new_key_1, k2 + 1, res);
             res.weight *= w1 * w2;
         } else { // if x in var
-            res = add(contract(Slicing(edge1, k1, 0), Slicing(edge2, k2, 0), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1), 
+            res = add(contract(Slicing(edge1, k1, 0), Slicing(edge2, k2, 0), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1),
                       contract(Slicing(edge1, k1, 1), Slicing(edge2, k2, 1), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1));
             cont_computed_table.insert(edge1.node, edge2.node, key_2_new_key_0, k1 + 1,
                                              key_2_new_key_1, k2 + 1, res);
@@ -894,7 +882,7 @@ Edge contract(const Edge& edge1_in, const Edge& edge2_in, const std::vector<keyT
                                              key_2_new_key_1, k2 + 1, res);
             res.weight *= w1 * w2;
         } else { // if x in var
-            res = add(contract(edge1, Slicing(edge2, k2, 0), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1), 
+            res = add(contract(edge1, Slicing(edge2, k2, 0), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1),
                       contract(edge1, Slicing(edge2, k2, 1), key_2_new_key_0, key_2_new_key_1, cont_order_0, cont_order_1, cont_num - 1));
             if (k1 + k2 > 3)
                 cont_computed_table.insert(edge1.node, edge2.node, key_2_new_key_0, k1 + 1,
