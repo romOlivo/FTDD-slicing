@@ -394,11 +394,15 @@ def contract_with_FTDD(path, tns, indices, n, N=12, force_init=True):
 
     global ctdd_has_init
     if force_init or ctdd_has_init is None or not ctdd_has_init:
+        import psutil
+        import math
 
         # cTDD Table parameters
         load_factor = 1
         alpha = 2
-        N = 22
+        memory = psutil.virtual_memory().available
+        N = int(math.log2(memory)) - 10
+        print(f"memory = {memory} // N = {N}")
 
         N_max = min(alpha * n, N)
 
